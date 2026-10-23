@@ -68,8 +68,8 @@ async function createClientAction(formData: FormData) {
     !name ||
     !/^[A-Z]{3}$/.test(currency) ||
     !STATUSES.includes(status as ClientStatus) ||
-    !/^\\d{4}-\\d{2}-\\d{2}$/.test(startDate) ||
-    (launchDate && !/^\\d{4}-\\d{2}-\\d{2}$/.test(launchDate))
+    !/^\d{4}-\d{2}-\d{2}$/.test(startDate) ||
+    (launchDate && !/^\d{4}-\d{2}-\d{2}$/.test(launchDate))
   ) {
     redirect("/clients?error=invalid");
   }
