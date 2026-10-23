@@ -1,5 +1,3 @@
-"use server";
-
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
@@ -22,6 +20,7 @@ async function portalContext() {
 
 async function submitDecision(form: FormData) {
   "use server";
+  "use server";
   const { supabase, user, membership } = await portalContext();
   const approvalId = String(form.get("approval_id") ?? "");
   const status = String(form.get("status") ?? "");
@@ -41,6 +40,7 @@ async function submitDecision(form: FormData) {
 }
 
 async function signOut() {
+  "use server";
   "use server";
   const supabase = await createClient();
   await supabase.auth.signOut();
