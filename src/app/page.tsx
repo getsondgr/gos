@@ -1,20 +1,9 @@
 
 import {
-  Activity,
   AlertTriangle,
-  BarChart3,
-  CalendarDays,
-  CheckCircle2,
-  CircleDollarSign,
-  Clock3,
   ClipboardCheck,
   LogOut,
-  Megaphone,
-  MousePointerClick,
-  Target,
-  TrendingUp,
   Users,
-  Wallet,
   BriefcaseBusiness,
   ArrowUpRight,
 } from "lucide-react";
@@ -264,10 +253,6 @@ export default async function HomePage() {
     clients.map((client) => [client.id, client.name])
   );
 
-  const activeClients = clients.filter(
-    (client) => !client.status || client.status === "active"
-  );
-
   const openTasks = tasks.filter(
     (task) =>
       !["completed", "canceled"].includes(String(task.status))
@@ -290,157 +275,6 @@ export default async function HomePage() {
       String(approval.status).toLowerCase()
     )
   );
-
-  const completedTasks = tasks.filter(
-    (task) => task.status === "completed"
-  );
-
-  const totals = metrics.reduce(
-    (result, row) => ({
-      spend: result.spend + numberValue(row.spend),
-      leads: result.leads + numberValue(row.leads),
-      conversions: result.conversions + numberValue(row.conversions),
-      revenue:
-        result.revenue + numberValue(row.attributed_revenue),
-      impressions: result.impressions + numberValue(row.impressions),
-      clicks: result.clicks + numberValue(row.clicks),
-    }),
-    {
-      spend: 0,
-      leads: 0,
-      conversions: 0,
-      revenue: 0,
-      impressions: 0,
-      clicks: 0,
-    }
-  );
-
-  const cpl = totals.leads > 0 ? totals.spend / totals.leads : null;
-  const roas = totals.spend > 0 ? totals.revenue / totals.spend : null;
-
-  const campaignTotals = new Map<
-    string,
-    {
-      spend: number;
-      leads: number;
-      conversions: number;
-      revenue: number;
-      impressions: number;
-      clicks: number;
-    }
-  >();
-
-  for (const row of metrics) {
-    const current = campaignTotals.get(row.campaign_id) ?? {
-      spend: 0,
-      leads: 0,
-      conversions: 0,
-      revenue: 0,
-      impressions: 0,
-      clicks: 0,
-    };
-
-    current.spend += numberValue(row.spend);
-    current.leads += numberValue(row.leads);
-    current.conversions += numberValue(row.conversions);
-    current.revenue += numberValue(row.attributed_revenue);
-    current.impressions += numberValue(row.impressions);
-    current.clicks += numberValue(row.clicks);
-    campaignTotals.set(row.campaign_id, current);
-  }
-
-  const topCampaigns = campaigns
-    .map((campaign) => ({
-      ...campaign,
-      totals: campaignTotals.get(campaign.id) ?? {
-        spend: 0,
-        leads: 0,
-        conversions: 0,
-        revenue: 0,
-        impressions: 0,
-        clicks: 0,
-      },
-    }))
-    .sort((a, b) => b.totals.spend - a.totals.spend)
-    .slice(0, 8);
-
-  const trend = Array.from({ length: 7 }, (_, index) => {
-    const day = new Date();
-    day.setDate(day.getDate() - (6 - index));
-    const date = day.toISOString().slice(0, 10);
-    const dayMetrics = metrics.filter((row) => row.report_date === date);
-
-    return {
-      date,
-      label: day.toLocaleDateString("en-IN", { weekday: "short" }),
-      spend: dayMetrics.reduce(
-        (sum, row) => sum + numberValue(row.spend),
-        0
-      ),
-      revenue: dayMetrics.reduce(
-        (sum, row) => sum + numberValue(row.attributed_revenue),
-        0
-      ),
-    };
-  });
-
-  const maxTrend = Math.max(
-    1,
-    ...trend.map((day) => Math.max(day.spend, day.revenue))
-  );
-
-  const kpis = [
-    {
-      title: "Attributed revenue",
-      value: money(totals.revenue, currency),
-      detail: "Campaign-attributed",
-      icon: CircleDollarSign,
-      tone: "purple",
-    },
-    {
-      title: "Ad spend",
-      value: money(totals.spend, currency),
-      detail: "Last 30 days",
-      icon: Wallet,
-      tone: "blue",
-    },
-    {
-      title: "Leads generated",
-      value: compactNumber(totals.leads),
-      detail: `${compactNumber(totals.clicks)} clicks`,
-      icon: Users,
-      tone: "green",
-    },
-    {
-      title: "Cost per lead",
-      value: cpl === null ? "—" : money(cpl, currency),
-      detail: "Spend divided by leads",
-      icon: Target,
-      tone: "orange",
-    },
-    {
-      title: "ROAS",
-      value: roas === null ? "—" : `${roas.toFixed(2)}×`,
-      detail: "Revenue ÷ spend",
-      icon: TrendingUp,
-      tone: "purple",
-    },
-    {
-      title: "Conversions",
-      value: compactNumber(totals.conversions),
-      detail: "Reported conversions",
-      icon: MousePointerClick,
-      tone: "green",
-    },
-  ];
-
-  const operationalErrors = [
-    tasksError,
-    approvalsError,
-    membersError,
-    projectsError,
-    clientsError,
-  ].filter(Boolean);
 
   const activeCount = clients.filter((client) => client.status === "active").length;
   const onboardingCount = clients.filter((client) => client.status === "onboarding").length;
