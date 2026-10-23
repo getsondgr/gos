@@ -1552,3 +1552,42 @@
 .auth-switch { margin: 24px 0 0; padding-top: 20px; border-top: 1px solid #edf0f5; color: #7b8598; font-size: 12px; text-align: center; }
 .auth-switch button { border: 0; background: transparent; color: #4e5be0; font: inherit; font-weight: 750; cursor: pointer; }
 @media (max-width: 480px) { .auth-card { padding: 27px 22px; border-radius: 17px; } .auth-card h1 { font-size: 27px; } }
+
+
+/* Agency daily action centre and reusable service templates */
+.dashboard-success{margin:0 0 18px;padding:12px 14px;border:1px solid #bcebd2;border-radius:10px;background:#edfbf3;color:#177548;font-size:12px}
+.task-filter-row{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px}
+.task-filter{display:inline-flex;align-items:center;padding:9px 12px;border:1px solid #e1e6ef;border-radius:9px;background:#fff;color:#59647a;font-size:11px;font-weight:700;text-decoration:none}
+.task-filter.active{border-color:#c9ceff;background:#eef0ff;color:#4c59d8}
+.task-list{display:grid;gap:12px}
+.task-card{display:grid;grid-template-columns:minmax(0,1fr) minmax(170px,220px);gap:20px;padding:18px;border:1px solid #edf0f5;border-radius:12px;background:#fff}
+.task-card-main{min-width:0}
+.task-title-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;color:#202940;font-size:13px}
+.task-card-main>p{margin:7px 0 0;color:#808a9e;font-size:11px;line-height:1.6}
+.task-card-main .task-description{color:#657087;max-width:760px}
+.task-meta{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:12px;color:#7c879b;font-size:10px}
+.task-priority,.task-state{display:inline-flex;padding:4px 7px;border-radius:6px;background:#f1f3f8;color:#697388;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.3px}
+.task-priority.high,.task-priority.urgent{background:#ffe8e9;color:#b42330}.task-priority.low{background:#e9f7ee;color:#168653}
+.task-state.completed{background:#def7e8;color:#168653}.task-state.blocked{background:#ffe5e7;color:#b42330}.task-state.in_review{background:#fff0d8;color:#a45b10}.task-state.in_progress{background:#e5e9ff;color:#4f5fe8}
+.task-status-form{display:flex;flex-direction:column;align-items:stretch;gap:8px;min-width:0}
+.task-status-form label{display:grid;gap:6px;color:#6f7a8e;font-size:10px;font-weight:700}
+.task-status-form select{width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #dfe5ef;border-radius:8px;background:#fff;color:#27334b;font:inherit;font-size:11px}
+.template-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:18px}
+.template-card{min-width:0;padding:22px;border:1px solid #e7eaf2;border-radius:15px;background:#fff;box-shadow:0 3px 12px rgba(26,38,66,.025)}
+.template-card.purple{border-top:4px solid #7865e8}.template-card.green{border-top:4px solid #24b47e}.template-card.orange{border-top:4px solid #f09a38}
+.template-card-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.template-mark{display:grid;place-items:center;width:36px;height:36px;border-radius:10px;background:#eef0ff;color:#4f5fe8;font-weight:800}
+.template-card.green .template-mark{background:#e2f8ec;color:#168653}.template-card.orange .template-mark{background:#fff0d8;color:#a45b10}
+.template-count{color:#8b94a6;font-size:10px;font-weight:700}
+.template-card h2{margin:18px 0 8px;color:#202940;font-size:17px;letter-spacing:-.3px}
+.template-card>p{min-height:65px;margin:0;color:#7b8598;font-size:11px;line-height:1.7}
+.template-card h3{margin:20px 0 10px;color:#4d5870;font-size:11px}
+.template-card ol{padding-left:18px;margin:0;color:#657087;font-size:11px;line-height:1.85}
+.setup-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.setup-steps>div{padding:16px;border-radius:10px;background:#f7f8fc}.setup-steps strong{color:#344058;font-size:12px}.setup-steps p{margin:7px 0 0;color:#7d8799;font-size:11px;line-height:1.65}
+.service-template-picker{grid-column:1/-1;display:grid;gap:10px;margin:0;padding:15px;border:1px solid #e1e6ef;border-radius:10px;background:#f9faff}
+.service-template-picker legend{padding:0 6px;color:#4e5b74;font-size:12px;font-weight:800}
+.service-template-picker label{display:flex;align-items:center;gap:9px;color:#4f5b72;font-size:12px;font-weight:600}
+.service-template-picker input[type=checkbox]{width:15px;height:15px;accent-color:#5865e8}
+.service-template-picker p{margin:2px 0 0;color:#8993a6;font-size:10px;line-height:1.6}
+@media(max-width:900px){.template-grid{grid-template-columns:1fr}.template-card>p{min-height:0}.setup-steps{grid-template-columns:1fr}.task-card{grid-template-columns:1fr}}
