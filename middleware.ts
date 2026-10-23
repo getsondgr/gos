@@ -9,7 +9,9 @@ export async function middleware(request: NextRequest) {
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseKey) {
-    return NextResponse.redirect(new URL("/login?error=config", request.url));
+    return NextResponse.redirect(
+      new URL("/login?error=config", request.url)
+    );
   }
 
   const supabase = createServerClient(supabaseUrl, supabaseKey, {
@@ -18,12 +20,15 @@ export async function middleware(request: NextRequest) {
         return request.cookies.getAll();
       },
       setAll(
-  cookiesToSet: {
-    name: string;
-    value: string;
-    options?: Parameters<typeof supabaseResponse.cookies.set>[2];
-  }[]
-) {
+        cookiesToSet: {
+          name: string;
+          value: string;
+          options?: Parameters<typeof supabaseResponse.cookies.set>[2];
+        }[]
+      ) {
+        cookiesToSet.forEach(({ name, value }) => {
+          request.cookies.set(name, value);
+        });
 
         supabaseResponse = NextResponse.next({ request });
 
@@ -43,8 +48,7 @@ export async function middleware(request: NextRequest) {
   const isAuthRoute = pathname.startsWith("/auth/");
 
   if (!user && !isLoginPage && !isAuthRoute) {
-    const loginUrl = new URL("/login", request.url);
-    return NextResponse.redirect(loginUrl);
+    return NextResponse.redirect(new URL("/login", request.url));
   }
 
   if (user && isLoginPage) {
