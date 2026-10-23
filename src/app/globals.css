@@ -1267,3 +1267,15 @@
  .client-room-form-row { grid-template-columns:1fr; }
  .client-room-section-heading { gap:10px; }
 }
+
+
+/* Clear feedback while forms are submitting */
+.submit-with-status { position:relative; }
+.submit-with-status:disabled { cursor:wait; opacity:.82; transform:none !important; box-shadow:none; }
+.submit-with-status:disabled span:last-child { opacity:.96; }
+.submit-spinner {
+  display:inline-block; width:12px; height:12px; margin-right:8px; vertical-align:-2px;
+  border:2px solid currentColor; border-right-color:transparent; border-radius:50%;
+  animation:growthos-spin .7s linear infinite;
+}
+@keyframes growthos-spin { to { transform:rotate(360deg); } }
