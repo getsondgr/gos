@@ -20,7 +20,6 @@ async function portalContext() {
 
 async function submitDecision(form: FormData) {
   "use server";
-  "use server";
   const { supabase, user, membership } = await portalContext();
   const approvalId = String(form.get("approval_id") ?? "");
   const status = String(form.get("status") ?? "");
