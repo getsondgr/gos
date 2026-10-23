@@ -35,9 +35,7 @@ export default function LoginPage() {
           },
         });
 
-        if (error) {
-          throw error;
-        }
+        if (error) throw error;
 
         setMessage(
           "Account request submitted. Check your email if confirmation is required."
@@ -48,24 +46,22 @@ export default function LoginPage() {
           password,
         });
 
-        if (error) {
-          throw error;
-        }
+        if (error) throw error;
 
         if (!data.session) {
-          throw new Error("Login succeeded but no session was returned.");
+          throw new Error(
+            "No login session was returned. Please try again."
+          );
         }
 
         setMessage("Sign-in successful. Opening Growth OS...");
 
-        // Navigate only after Supabase has returned a valid session.
+        // Allow the browser to finish storing the session before navigation.
         window.location.assign("/");
       }
     } catch (error) {
       setMessage(
-        error instanceof Error
-          ? error.message
-          : "Something went wrong. Please try again."
+        error instanceof Error ? error.message : "Something went wrong."
       );
     } finally {
       setLoading(false);
