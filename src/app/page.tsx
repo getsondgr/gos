@@ -41,14 +41,20 @@ export default function LoginPage() {
           "Account request submitted. Check your email if confirmation is required."
         );
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
+        const { data, error } = await supabase.auth.signInWithPassword({
+  email,
+  password,
+});
 
-        if (error) throw error;
+if (error) throw error;
 
-        window.location.href = "/";
+if (!data.session) {
+  throw new Error("Sign-in returned no session. Please try again.");
+}
+
+setMessage("Sign-in successful. Opening Growth OS...");
+
+window.location.href = "/";
       }
     } catch (error) {
       setMessage(
