@@ -183,9 +183,7 @@ export default async function HomePage() {
   const metrics = (metricData ?? []) as MetricRow[];
 
   const clientNames = new Map(clients.map((client) => [client.id, client.name]));
-  const campaignNames = new Map(
-    campaigns.map((campaign) => [campaign.id, campaign.name])
-  );
+
 
   const totals = metrics.reduce(
     (result, row) => ({
