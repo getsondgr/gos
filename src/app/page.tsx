@@ -11,26 +11,6 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 
-type MetricRow = {
-  campaign_id: string;
-  report_date: string;
-  spend: number | string;
-  impressions: number | string;
-  clicks: number | string;
-  leads: number | string;
-  conversions: number | string;
-  attributed_revenue: number | string | null;
-  currency: string;
-};
-
-type CampaignRow = {
-  id: string;
-  name: string;
-  platform: string;
-  status: string;
-  client_id: string;
-};
-
 type ClientRow = {
   id: string;
   name: string;
@@ -55,46 +35,6 @@ type ApprovalRow = {
   status: string;
   submitted_at: string;
   resource_type: string;
-};
-
-type MemberRow = {
-  user_id: string;
-  role: string;
-  status: string;
-};
-
-type ProjectRow = {
-  id: string;
-  client_id: string;
-  name: string;
-  status: string;
-};
-
-const numberValue = (value: number | string | null | undefined) =>
-  Number(value ?? 0) || 0;
-
-const money = (value: number, currency = "INR") =>
-  new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency,
-    maximumFractionDigits: 0,
-  }).format(value);
-
-const compactNumber = (value: number) =>
-  new Intl.NumberFormat("en-IN", {
-    notation: "compact",
-    maximumFractionDigits: 1,
-  }).format(value);
-
-const platformName = (platform: string) => {
-  const names: Record<string, string> = {
-    meta: "Meta Ads",
-    google: "Google Ads",
-    linkedin: "LinkedIn Ads",
-    tiktok: "TikTok Ads",
-    other: "Other",
-  };
-  return names[platform] ?? platform;
 };
 
 const prettyStatus = (status: string) =>
@@ -178,76 +118,22 @@ export default async function HomePage() {
     .eq("id", agencyId)
     .maybeSingle();
 
-  const currency = (agency?.default_currency ?? "INR").trim() || "INR";
-
   const today = new Date();
   const todayDate = today.toISOString().slice(0, 10);
-  const since = new Date();
-  since.setDate(since.getDate() - 29);
-  const sinceDate = since.toISOString().slice(0, 10);
 
   const [
-    { data: campaignData, error: campaignsError },
     { data: clientData, error: clientsError },
-    { data: metricData, error: metricsError },
     { data: taskData, error: tasksError },
     { data: approvalData, error: approvalsError },
-    { data: memberData, error: membersError },
-    { data: projectData, error: projectsError },
   ] = await Promise.all([
-    supabase
-      .from("campaigns")
-      .select("id, name, platform, status, client_id")
-      .eq("agency_id", agencyId)
-      .order("created_at", { ascending: false }),
-    supabase
-      .from("clients")
-      .select("id, name, status")
-      .eq("agency_id", agencyId)
-      .order("name"),
-    supabase
-      .from("performance_metrics_daily")
-      .select(
-        "campaign_id, report_date, spend, impressions, clicks, leads, conversions, attributed_revenue, currency"
-      )
-      .eq("agency_id", agencyId)
-      .eq("currency", currency)
-      .gte("report_date", sinceDate)
-      .order("report_date", { ascending: true }),
-    supabase
-      .from("tasks")
-      .select(
-        "id, client_id, title, status, priority, assignee_id, due_at, visibility"
-      )
-      .eq("agency_id", agencyId)
-      .order("due_at", { ascending: true })
-      .limit(200),
-    supabase
-      .from("approvals")
-      .select("id, client_id, title, status, submitted_at, resource_type")
-      .eq("agency_id", agencyId)
-      .order("submitted_at", { ascending: false })
-      .limit(100),
-    supabase
-      .from("agency_members")
-      .select("user_id, role, status")
-      .eq("agency_id", agencyId)
-      .eq("status", "active"),
-    supabase
-      .from("projects")
-      .select("id, client_id, name, status")
-      .eq("agency_id", agencyId)
-      .order("updated_at", { ascending: false })
-      .limit(100),
+    supabase.from("clients").select("id, name, status").eq("agency_id", agencyId).order("name"),
+    supabase.from("tasks").select("id, client_id, title, status, priority, assignee_id, due_at, visibility").eq("agency_id", agencyId).order("due_at", { ascending: true }).limit(200),
+    supabase.from("approvals").select("id, client_id, title, status, submitted_at, resource_type").eq("agency_id", agencyId).order("submitted_at", { ascending: false }).limit(100),
   ]);
 
-  const campaigns = (campaignData ?? []) as CampaignRow[];
   const clients = (clientData ?? []) as ClientRow[];
-  const metrics = (metricData ?? []) as MetricRow[];
   const tasks = (taskData ?? []) as TaskRow[];
   const approvals = (approvalData ?? []) as ApprovalRow[];
-  const members = (memberData ?? []) as MemberRow[];
-  const projects = (projectData ?? []) as ProjectRow[];
 
   const clientNames = new Map(
     clients.map((client) => [client.id, client.name])
