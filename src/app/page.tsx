@@ -1,133 +1,114 @@
 
-"use client";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
 
-import { useState } from "react";
-import { createClient } from "@supabase/supabase-js";
+export default async function HomePage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-export default function LoginPage() {
-  const [mode, setMode] = useState<"login" | "signup">("login");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [message, setMessage] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  async function submit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setLoading(true);
-    setMessage("Sign-in successful. Opening Growth OS...");
-
-    try {
-      const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-      if (!url || !key) {
-        throw new Error("Supabase configuration is missing.");
-      }
-
-      const supabase = createClient(url, key);
-
-      if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/login`,
-          },
-        });
-
-        if (error) throw error;
-
-        setMessage(
-          "Account request submitted. Check your email if confirmation is required."
-        );
-      } else {
-        const { data, error } = await supabase.auth.signInWithPassword({
-  email,
-  password,
-});
-
-if (error) throw error;
-
-if (!data.session) {
-  throw new Error("Sign-in returned no session. Please try again.");
-}
-
-setMessage("Sign-in successful. Opening Growth OS...");
-
-window.location.href = "/";
-      }
-    } catch (error) {
-      setMessage(
-        error instanceof Error ? error.message : "Something went wrong."
-      );
-    } finally {
-      setLoading(false);
-    }
+  if (!user) {
+    redirect("/login");
   }
 
+  async function signOut() {
+    "use server";
+
+    const supabase = await createClient();
+    await supabase.auth.signOut();
+    redirect("/login");
+  }
+
+  const cardStyle = {
+    background: "white",
+    border: "1px solid #e5e7eb",
+    borderRadius: "14px",
+    padding: "22px",
+  };
+
   return (
-    <main className="auth-page">
-      <section className="auth-card">
-        <div className="auth-brand">growth<span>os</span></div>
-        <p className="auth-eyebrow">YOUR AGENCY COMMAND CENTER</p>
+    <main
+      style={{
+        minHeight: "100vh",
+        background: "#f5f7fb",
+        color: "#111827",
+        fontFamily: "Arial, sans-serif",
+      }}
+    >
+      <header
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: "16px",
+          padding: "20px 5%",
+          background: "white",
+          borderBottom: "1px solid #e5e7eb",
+        }}
+      >
+        <div style={{ fontSize: "24px", fontWeight: 800 }}>
+          growth<span style={{ color: "#635bff" }}>os</span>
+        </div>
 
-        <h1>{mode === "login" ? "Welcome back" : "Create your account"}</h1>
-        <p className="auth-subtitle">
-          {mode === "login"
-            ? "Sign in to continue to Growth OS."
-            : "Start setting up your Growth OS workspace."}
-        </p>
-
-        <form onSubmit={submit} className="auth-form">
-          <label htmlFor="email">Email address</label>
-          <input
-            id="email"
-            type="email"
-            autoComplete="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@company.com"
-          />
-
-          <label htmlFor="password">Password</label>
-          <input
-            id="password"
-            type="password"
-            autoComplete={
-              mode === "login" ? "current-password" : "new-password"
-            }
-            minLength={8}
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="At least 8 characters"
-          />
-
-          <button disabled={loading} type="submit">
-            {loading
-              ? "Please wait..."
-              : mode === "login"
-                ? "Sign in"
-                : "Create account"}
-          </button>
-        </form>
-
-        {message && <p className="auth-message" role="status">{message}</p>}
-
-        <p className="auth-switch">
-          {mode === "login"
-            ? "New to Growth OS? "
-            : "Already have an account? "}
+        <form action={signOut}>
           <button
-            type="button"
-            onClick={() => {
-              setMode(mode === "login" ? "signup" : "login");
-              setMessage("");
+            type="submit"
+            style={{
+              padding: "10px 16px",
+              border: "1px solid #d1d5db",
+              borderRadius: "8px",
+              background: "white",
+              cursor: "pointer",
             }}
           >
-            {mode === "login" ? "Create account" : "Sign in"}
+            Sign out
           </button>
+        </form>
+      </header>
+
+      <section style={{ padding: "40px 5%", maxWidth: "1200px", margin: "auto" }}>
+        <p style={{ color: "#635bff", fontWeight: 700 }}>
+          AGENCY COMMAND CENTER
+        </p>
+
+        <h1 style={{ fontSize: "32px", marginBottom: "8px" }}>
+          Welcome to Growth OS
+        </h1>
+
+        <p style={{ color: "#6b7280", marginBottom: "32px" }}>
+          You are signed in as {user.email}.
+        </p>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+            gap: "18px",
+          }}
+        >
+          <div style={cardStyle}>
+            <p style={{ color: "#6b7280" }}>Workspace</p>
+            <h2>Growth OS</h2>
+            <p>Your workspace is ready to set up.</p>
+          </div>
+
+          <div style={cardStyle}>
+            <p style={{ color: "#6b7280" }}>Clients</p>
+            <h2>Get started</h2>
+            <p>Connect your client records when client management is implemented.</p>
+          </div>
+
+          <div style={cardStyle}>
+            <p style={{ color: "#6b7280" }}>Campaigns</p>
+            <h2>Get started</h2>
+            <p>Campaign integrations and live reporting still need to be connected.</p>
+          </div>
+        </div>
+
+        <p style={{ color: "#6b7280", marginTop: "28px", fontSize: "14px" }}>
+          This is the initial dashboard screen. Live metrics and client data
+          have not yet been connected.
         </p>
       </section>
     </main>
