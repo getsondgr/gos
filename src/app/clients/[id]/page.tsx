@@ -73,6 +73,44 @@ async function createRequest(form: FormData) {
   redirect(`/clients/${clientId}?success=request`);
 }
 
+async function createApproval(form: FormData) {
+  "use server";
+  const { supabase, user, membership } = await context();
+  const clientId = String(form.get("client_id") ?? "");
+  const title = String(form.get("title") ?? "").trim();
+  const ticketId = String(form.get("ticket_id") ?? "");
+  if (!clientId || title.length < 3 || title.length > 160) redirect(`/clients/${clientId}?error=approval`);
+  const { data: client } = await supabase.from("clients").select("id").eq("id", clientId).eq("agency_id", membership.agency_id).maybeSingle();
+  if (!client) notFound();
+  let resourceId = ticketId;
+  if (ticketId) {
+    const { data: ticket } = await supabase.from("tickets").select("id").eq("id", ticketId).eq("client_id", clientId).eq("agency_id", membership.agency_id).maybeSingle();
+    if (!ticket) redirect(`/clients/${clientId}?error=approval`);
+  }
+  const { error } = await supabase.from("approvals").insert({
+    agency_id: membership.agency_id, client_id: clientId, resource_type: ticketId ? "ticket" : "general",
+    resource_id: resourceId || clientId, version_number: 1, title, status: "pending", submitted_by: user.id, submitted_at: new Date().toISOString()
+  });
+  if (error) redirect(`/clients/${clientId}?error=approval`);
+  revalidatePath(`/clients/${clientId}`);
+  redirect(`/clients/${clientId}?success=approval`);
+}
+
+async function updateApproval(form: FormData) {
+  "use server";
+  const { supabase, membership, user } = await context();
+  const clientId = String(form.get("client_id") ?? "");
+  const approvalId = String(form.get("approval_id") ?? "");
+  const status = String(form.get("status") ?? "");
+  const comment = String(form.get("review_comment") ?? "").trim();
+  if (!clientId || !approvalId || !["approved","changes_requested","rejected"].includes(status)) redirect(`/clients/${clientId}?error=approval-update`);
+  const { error } = await supabase.from("approvals").update({ status, review_comment: comment || null, reviewed_by: user.id, reviewed_at: new Date().toISOString() }).eq("id", approvalId).eq("client_id", clientId).eq("agency_id", membership.agency_id);
+  if (error) redirect(`/clients/${clientId}?error=approval-update`);
+  revalidatePath(`/clients/${clientId}`);
+  revalidatePath("/");
+  redirect(`/clients/${clientId}?success=approval-update`);
+}
+
 async function updateRequest(form: FormData) {
   "use server";
   const { supabase, membership } = await context();
@@ -141,10 +179,10 @@ export default async function ClientRoomPage({ params, searchParams }: {
   }
   const messages: Record<string,string> = {
     "success=task":"Action item created and shared.", "success=update":"Action status updated.",
-    "success=request":"Client request created.", "success=reply":"Reply added.", "success=request-update":"Request status updated.",
+    "success=request":"Client request created.", "success=reply":"Reply added.", "success=request-update":"Request status updated.", "success=approval":"Approval request created.", "success=approval-update":"Approval status updated.",
     "error=task":"Could not create action. Check the fields and database permissions.",
     "error=update":"Could not update this action.", "error=request":"Could not create request.",
-    "error=reply":"Could not add reply. Check database permissions.", "error=request-update":"Could not update request status."
+    "error=reply":"Could not add reply. Check database permissions.", "error=request-update":"Could not update request status.", "error=approval":"Could not create approval request.", "error=approval-update":"Could not update approval."
   };
   const messageKey = Object.keys(messages).find(k => { const [a,b] = k.split("="); return String(query[a] ?? "") === b; });
 
@@ -167,6 +205,6 @@ export default async function ClientRoomPage({ params, searchParams }: {
     <section className="clients-panel"><div className="client-room-section-heading"><div><h2>Requests & replies</h2><p className="clients-panel-subtitle">Replies created here are client-visible; internal notes are not shown.</p></div><span className="client-room-count">{openTickets.length} open</span></div>
       {!tickets.length ? <div className="clients-empty"><strong>No requests yet</strong><p>Create a request above to start a trackable conversation.</p></div> : <div className="client-room-record-list">{tickets.map(t=><article className="client-room-ticket" key={t.id}><div className="client-room-section-heading"><div><strong>{t.title}</strong><p className="client-room-record-meta">Request #{t.ticket_number} · {label(t.priority)} · {label(t.status)} · {dateLabel(t.created_at)}</p></div><form action={updateRequest} className="client-room-inline-form"><input type="hidden" name="client_id" value={id}/><input type="hidden" name="ticket_id" value={t.id}/><label className="sr-only" htmlFor={`request-status-${t.id}`}>Status for request {t.title}</label><select id={`request-status-${t.id}`} name="status" defaultValue={t.status}><option value="submitted">Submitted</option><option value="under_review">Under review</option><option value="awaiting_client">Awaiting client</option><option value="approved">Approved</option><option value="in_progress">In progress</option><option value="completed">Completed</option><option value="rejected">Rejected</option><option value="canceled">Canceled</option></select><SubmitButton className="clients-secondary" pendingText="Saving…">Save</SubmitButton></form></div>{t.description && <p className="client-room-ticket-description">{t.description}</p>}<div className="client-room-comments">{comments.filter(c=>c.ticket_id===t.id).map(c=><div className="client-room-comment" key={c.id}><p>{c.body}</p><span>{c.author_id===user.id ? "You" : "Agency team"} · {new Date(c.created_at).toLocaleString("en-IN",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}</span></div>)}</div><form action={addReply} className="client-room-reply-form"><input type="hidden" name="client_id" value={id}/><input type="hidden" name="ticket_id" value={t.id}/><label>Reply (visible to client)<textarea name="body" required maxLength={3000} rows={2} placeholder="Write a clear update or response…"/></label><SubmitButton className="clients-secondary" pendingText="Sending reply…">Add reply</SubmitButton></form></article>)}</div>}
     </section>
-    <section className="clients-panel"><h2>Approvals</h2><p className="clients-panel-subtitle">Approval status from existing records. Approval actions can be added after this workflow is verified.</p>{!approvals.length ? <div className="clients-empty"><strong>No approvals yet</strong><p>Approval requests will appear here when submitted.</p></div> : <div className="client-room-record-list">{approvals.map(a=><article className="client-room-record" key={a.id}><div className="client-room-record-copy"><strong>{a.title}</strong><span>Submitted {dateLabel(a.submitted_at)}</span>{a.review_comment && <p>{a.review_comment}</p>}</div><span className={`clients-status ${a.status==="approved"?"active":"onboarding"}`}>{label(a.status)}</span></article>)}</div>}</section>
+    <section className="clients-panel"><h2>Approval center</h2><p className="clients-panel-subtitle">Request a decision on a deliverable and track the result here.</p><form action={createApproval} className="client-room-inline-form"><input type="hidden" name="client_id" value={id}/><label>What needs approval? <input name="title" required minLength={3} maxLength={160} placeholder="e.g. October ad creatives"/></label><SubmitButton className="clients-primary" pendingText="Submitting…">Request approval</SubmitButton></form>{!approvals.length ? <div className="clients-empty"><strong>No approvals yet</strong><p>Create your first approval request above. It will appear here after saving.</p></div> : <div className="client-room-record-list">{approvals.map(a=><article className="client-room-record" key={a.id}><div className="client-room-record-copy"><strong>{a.title}</strong><span>Submitted {dateLabel(a.submitted_at)}</span>{a.review_comment && <p>{a.review_comment}</p>}</div>{a.status==="pending" || a.status==="changes_requested" ? <form action={updateApproval} className="client-room-inline-form"><input type="hidden" name="client_id" value={id}/><input type="hidden" name="approval_id" value={a.id}/><label>Decision<select name="status" defaultValue={a.status==="pending"?"approved":a.status}><option value="approved">Approve</option><option value="changes_requested">Request changes</option><option value="rejected">Reject</option></select></label><label>Comment<input name="review_comment" defaultValue={a.review_comment ?? ""} placeholder="Optional feedback"/></label><SubmitButton className="clients-secondary" pendingText="Saving…">Save decision</SubmitButton></form> : <span className={`clients-status ${a.status==="approved"?"active":"onboarding"}`}>{label(a.status)}</span>}</article>)}</div>}</section>
   </div></main>;
 }
