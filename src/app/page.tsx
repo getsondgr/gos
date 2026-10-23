@@ -94,7 +94,7 @@ export default async function HomePage() {
     return (
       <main className="dashboard-page">
         <div className="dashboard-error">
-          <h1>We couldn't load your workspace</h1>
+          <h1>We couldn&apos;t load your workspace</h1>
           <p>
             Please check that the Growth OS database migration has been
             applied and your account has active agency membership.
@@ -123,7 +123,7 @@ export default async function HomePage() {
           <p className="dashboard-eyebrow">WORKSPACE SETUP</p>
           <h1>Welcome to Growth OS</h1>
           <p className="dashboard-subtitle">
-            Your login works, but this account isn't linked to an active
+            Your login works, but this account isn&apos;t linked to an active
             agency yet. Add an agency and an active agency_members record
             for this user to start seeing workspace data.
           </p>
