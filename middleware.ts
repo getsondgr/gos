@@ -39,10 +39,14 @@ export async function middleware(request: NextRequest) {
     },
   });
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+const {
+  data: { user },
+  error: authError,
+} = await supabase.auth.getUser();
 
+if (authError) {
+  console.error("Growth OS auth check failed:", authError.message);
+}
   const pathname = request.nextUrl.pathname;
   const isLoginPage = pathname === "/login";
   const isAuthRoute = pathname.startsWith("/auth/");
