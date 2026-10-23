@@ -336,10 +336,23 @@ export default async function ClientsPage({
               <tbody>
                 {filtered.map((client) => (
                   <tr key={client.id}>
-                    <td style={tableCell}>
-                      <strong>{client.name}</strong>
-                      <div style={{ color: "#94a3b8", fontSize: 12 }}>{client.slug}</div>
-                    </td>
+                    
+<td style={tableCell}>
+  <Link
+    href={`/clients/${client.id}`}
+    style={{
+      color: "#4f46e5",
+      fontWeight: 700,
+      textDecoration: "none",
+    }}
+  >
+    {client.name} →
+  </Link>
+  <div style={{ color: "#94a3b8", fontSize: 12 }}>
+    {client.slug}
+  </div>
+</td>
+
                     <td style={tableCell}>{client.industry || "—"}</td>
                     <td style={tableCell}>
                       <span style={{ display: "inline-block", borderRadius: 20, padding: "5px 9px", background: client.status === "active" ? "#dcfce7" : client.status === "paused" ? "#fef3c7" : client.status === "archived" ? "#f1f5f9" : "#e0e7ff" }}>
