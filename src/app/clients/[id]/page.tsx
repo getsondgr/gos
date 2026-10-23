@@ -82,14 +82,14 @@ async function createApproval(form: FormData) {
   if (!clientId || title.length < 3 || title.length > 160) redirect(`/clients/${clientId}?error=approval`);
   const { data: client } = await supabase.from("clients").select("id").eq("id", clientId).eq("agency_id", membership.agency_id).maybeSingle();
   if (!client) notFound();
-  let resourceId = ticketId;
   if (ticketId) {
     const { data: ticket } = await supabase.from("tickets").select("id").eq("id", ticketId).eq("client_id", clientId).eq("agency_id", membership.agency_id).maybeSingle();
     if (!ticket) redirect(`/clients/${clientId}?error=approval`);
   }
+  const resourceId = ticketId || clientId;
   const { error } = await supabase.from("approvals").insert({
     agency_id: membership.agency_id, client_id: clientId, resource_type: ticketId ? "ticket" : "general",
-    resource_id: resourceId || clientId, version_number: 1, title, status: "pending", submitted_by: user.id, submitted_at: new Date().toISOString()
+    resource_id: resourceId, version_number: 1, title, status: "pending", submitted_by: user.id, submitted_at: new Date().toISOString()
   });
   if (error) redirect(`/clients/${clientId}?error=approval`);
   revalidatePath(`/clients/${clientId}`);
