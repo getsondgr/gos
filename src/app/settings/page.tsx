@@ -1,0 +1,25 @@
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+
+const templates = [
+ { name: "Social media management", color: "purple", description: "Client onboarding, account access, strategy, content pillars, publishing schedule and weekly account checks.", tasks: ["Collect brand assets and social account access", "Confirm strategy and content pillars", "Plan the first content calendar", "Schedule approved social content", "Weekly social content and account check"] },
+ { name: "Content calendar & creative approvals", color: "green", description: "Content planning, creative production, client review, revision cycles and approval history.", tasks: ["Plan content calendar", "Prepare first batch of creatives", "Submit content for client approval", "Apply client feedback and prepare final versions"] },
+ { name: "Campaign management", color: "orange", description: "Campaign strategy, creative, tracking, quality assurance, launch readiness and post-launch checks.", tasks: ["Confirm objective, offer, budget and audience", "Prepare campaign angles, copy and creatives", "Configure campaign and conversion tracking", "Submit campaign creatives for approval", "Test landing page, forms and lead routing", "Complete launch readiness checklist", "Launch campaign and verify delivery", "First delivery check", "Initial performance review"] },
+];
+
+export default async function SettingsPage() {
+ const supabase = await createClient();
+ const { data: { user } } = await supabase.auth.getUser();
+ if (!user) redirect("/login");
+ const { data: membership } = await supabase.from("agency_members").select("agency_id").eq("user_id", user.id).eq("status", "active").limit(1).maybeSingle();
+ if (!membership) redirect("/clients?error=workspace");
+ const { data: clients } = await supabase.from("clients").select("id").eq("agency_id", membership.agency_id);
+ const { data: tasks } = await supabase.from("tasks").select("id").eq("agency_id", membership.agency_id);
+ return <main className="dashboard-page"><aside className="dashboard-sidebar"><div className="dashboard-brand">growth<span>os</span></div><p className="sidebar-label">WORKSPACE</p><Link className="sidebar-link" href="/">▦ Overview</Link><Link className="sidebar-link" href="/clients">♙ Clients</Link><Link className="sidebar-link" href="/tasks">✓ Tasks & calendar</Link><Link className="sidebar-link active" href="/settings">⚙ Service templates</Link><div className="sidebar-bottom"><div className="user-avatar">{(user.email?.[0] ?? "G").toUpperCase()}</div><div className="user-info"><strong>{user.email}</strong><span>Agency workspace</span></div></div></aside>
+ <section className="dashboard-main"><header className="dashboard-topbar"><div><p className="dashboard-eyebrow">AGENCY SETTINGS</p><h1>Service templates</h1><p className="dashboard-subtitle">Reusable delivery plans that create a consistent workflow for every new client.</p></div><Link href="/clients" className="clients-primary">+ Onboard client</Link></header>
+ <section className="kpi-grid"><article className="kpi-card"><div className="kpi-topline">Available templates</div><div className="kpi-value">{templates.length}</div><p className="kpi-detail">Selectable during onboarding</p></article><article className="kpi-card"><div className="kpi-topline">Clients in workspace</div><div className="kpi-value">{clients?.length ?? 0}</div><p className="kpi-detail">Across this agency</p></article><article className="kpi-card"><div className="kpi-topline">Tasks generated</div><div className="kpi-value">{tasks?.length ?? 0}</div><p className="kpi-detail">From plans and manual work</p></article></section>
+ <div className="template-grid">{templates.map((template) => <article className={`template-card ${template.color}`} key={template.name}><div className="template-card-top"><span className="template-mark">{template.name.slice(0,1)}</span><span className="template-count">{template.tasks.length} tasks</span></div><h2>{template.name}</h2><p>{template.description}</p><h3>Included workflow</h3><ol>{template.tasks.map((task) => <li key={task}>{task}</li>)}</ol></article>)}</div>
+ <section className="panel"><div className="panel-heading"><div><h2>How onboarding works</h2><p>Choose the services on the client form. Growth OS generates the matching starter tasks with due dates.</p></div></div><div className="setup-steps"><div><strong>1. Select services</strong><p>Social media, content approvals and/or campaign management.</p></div><div><strong>2. Set dates</strong><p>Choose the service start date and, when relevant, campaign launch date.</p></div><div><strong>3. Review the plan</strong><p>Open the client workspace to update statuses and keep the delivery plan current.</p></div></div></section>
+ <footer className="dashboard-footer"><span>Growth OS · Service templates</span><span>Templates are starter defaults; customise tasks in the client workspace.</span></footer></section></main>;
+}
