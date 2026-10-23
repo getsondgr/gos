@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import SubmitButton from "@/components/submit-button";
 
 const STATUSES = ["onboarding", "active", "paused", "archived"] as const;
 
@@ -292,7 +293,7 @@ export default async function ClientsPage({
                 <option value="SGD">SGD $</option>
               </select>
             </label>
-            <div><button type="submit" className="clients-primary">+ Add client</button></div>
+            <div><SubmitButton className="clients-primary" pendingText="Adding client…">+ Add client</SubmitButton></div>
           </form>
         </section>
 
@@ -364,11 +365,11 @@ export default async function ClientsPage({
                               <option value="EUR">EUR</option>
                               <option value="SGD">SGD</option>
                             </select>
-                            <button type="submit" className="clients-primary">Save changes</button>
+                            <SubmitButton className="clients-primary" pendingText="Saving changes…">Save changes</SubmitButton>
                           </form>
                           <form action={deleteClientAction}>
                             <input type="hidden" name="id" value={client.id} />
-                            <button type="submit" className="clients-danger">Delete client</button>
+                            <SubmitButton className="clients-danger" pendingText="Deleting client…">Delete client</SubmitButton>
                           </form>
                         </details>
                       </td>
