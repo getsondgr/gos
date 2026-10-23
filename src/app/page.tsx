@@ -442,454 +442,79 @@ export default async function HomePage() {
     clientsError,
   ].filter(Boolean);
 
+  const activeCount = clients.filter((client) => client.status === "active").length;
+  const onboardingCount = clients.filter((client) => client.status === "onboarding").length;
+  const clientTasks = (clientId: string) => openTasks.filter((task) => task.client_id === clientId);
+  const clientOverdues = (clientId: string) => overdueTasks.filter((task) => task.client_id === clientId);
+  const clientReviews = (clientId: string) => pendingApprovals.filter((approval) => approval.client_id === clientId);
+  const attentionTasks = [...overdueTasks, ...dueSoonTasks]
+    .filter((task, index, all) => all.findIndex((item) => item.id === task.id) === index)
+    .slice(0, 8);
+
   return (
     <main className="dashboard-page">
       <aside className="dashboard-sidebar">
-        <div className="dashboard-brand">
-          growth<span>os</span>
-        </div>
-
+        <div className="dashboard-brand">growth<span>os</span></div>
         <p className="sidebar-label">WORKSPACE</p>
-        <Link className="sidebar-link active" href="/">
-          <BarChart3 size={18} /> Overview
-        </Link>
-        <Link className="sidebar-link" href="/clients">
-          <Users size={18} /> Clients
-        </Link>
-        <div className="sidebar-link muted">
-          <Megaphone size={18} /> Campaigns
-          <span className="coming-soon">Next</span>
-        </div>
-        <div className="sidebar-link muted">
-          <Activity size={18} /> Reports
-          <span className="coming-soon">Next</span>
-        </div>
-
+        <Link className="sidebar-link active" href="/"><BriefcaseBusiness size={18} /> Overview</Link>
+        <Link className="sidebar-link" href="/clients"><Users size={18} /> Clients</Link>
         <div className="sidebar-bottom">
-          <div className="user-avatar">
-            {(user.email?.[0] ?? "G").toUpperCase()}
-          </div>
-          <div className="user-info">
-            <strong>{user.email}</strong>
-            <span>{agency?.name ?? "Agency workspace"}</span>
-          </div>
-          <form action={signOut}>
-            <button
-              className="icon-button"
-              type="submit"
-              title="Sign out"
-              aria-label="Sign out"
-            >
-              <LogOut size={17} />
-            </button>
-          </form>
+          <div className="user-avatar">{(user.email?.[0] ?? "G").toUpperCase()}</div>
+          <div className="user-info"><strong>{user.email}</strong><span>{agency?.name ?? "Agency workspace"}</span></div>
+          <form action={signOut}><button className="icon-button" type="submit" title="Sign out" aria-label="Sign out"><LogOut size={17} /></button></form>
         </div>
       </aside>
 
       <section className="dashboard-main">
         <header className="dashboard-topbar">
           <div>
-            <p className="dashboard-eyebrow">AGENCY COMMAND CENTER</p>
-            <h1>Good to see you</h1>
-            <p className="dashboard-subtitle">
-              Your performance, priorities, and client work in one place.
-            </p>
+            <p className="dashboard-eyebrow">AGENCY OWNER VIEW</p>
+            <h1>Client work at a glance</h1>
+            <p className="dashboard-subtitle">See what is moving, what is late, and what needs a client decision.</p>
           </div>
-          <div className="date-pill">
-            <CalendarDays size={16} /> Last 30 days
-          </div>
+          <Link href="/clients" className="clients-primary">+ Add or view clients</Link>
         </header>
 
-        <div className="workspace-line">
-          <span className="status-dot" />
-          {agency?.name ?? "Your agency"} <span>·</span>
-          {currency} reporting <span>·</span>
-          {prettyStatus(currentRole)}
-        </div>
-
-        {(campaignsError || metricsError || operationalErrors.length > 0) && (
-          <div className="dashboard-warning">
-            <AlertTriangle size={17} />
-            Some workspace information could not be loaded. Check the
-            affected table permissions and Supabase policies.
-          </div>
+        {(tasksError || approvalsError || clientsError) && (
+          <div className="dashboard-warning"><AlertTriangle size={17} /> Some work information could not load. Please check workspace permissions.</div>
         )}
 
-        <section className="kpi-grid" aria-label="Performance KPIs">
-          {kpis.map((kpi) => {
-            const Icon = kpi.icon;
-            return (
-              <article className="kpi-card" key={kpi.title}>
-                <div className="kpi-topline">
-                  <span>{kpi.title}</span>
-                  <span className={`kpi-icon ${kpi.tone}`}>
-                    <Icon size={19} />
-                  </span>
-                </div>
-                <div className="kpi-value">{kpi.value}</div>
-                <p className="kpi-detail">{kpi.detail}</p>
-              </article>
-            );
-          })}
-        </section>
-
-        <section className="dashboard-panels">
-          <article className="panel trend-panel">
-            <div className="panel-heading">
-              <div>
-                <h2>Spend vs. revenue</h2>
-                <p>Daily totals for the last 7 days</p>
-              </div>
-              <span className="panel-icon">
-                <TrendingUp size={18} />
-              </span>
-            </div>
-
-            <div className="chart-legend">
-              <span><i className="legend-spend" /> Ad spend</span>
-              <span><i className="legend-revenue" /> Revenue</span>
-            </div>
-
-            <div className="bar-chart" aria-label="Daily spend and revenue">
-              {trend.map((day) => (
-                <div className="bar-day" key={day.date}>
-                  <div className="bar-pair">
-                    <div
-                      className="bar spend-bar"
-                      style={{
-                        height: `${Math.max(3, (day.spend / maxTrend) * 100)}%`,
-                      }}
-                      title={`Spend: ${money(day.spend, currency)}`}
-                    />
-                    <div
-                      className="bar revenue-bar"
-                      style={{
-                        height: `${Math.max(3, (day.revenue / maxTrend) * 100)}%`,
-                      }}
-                      title={`Revenue: ${money(day.revenue, currency)}`}
-                    />
-                  </div>
-                  <span>{day.label}</span>
-                </div>
-              ))}
-            </div>
-
-            {metrics.length === 0 && (
-              <p className="empty-note">
-                No reporting records for this period yet. Campaign metrics
-                will appear here once reporting data is added.
-              </p>
-            )}
-          </article>
-
-          <article className="panel summary-panel">
-            <div className="panel-heading">
-              <div>
-                <h2>Workspace snapshot</h2>
-                <p>Agency-wide activity</p>
-              </div>
-              <BriefcaseBusiness size={19} />
-            </div>
-            <div className="summary-stat">
-              <span>Clients</span><strong>{clients.length}</strong>
-            </div>
-            <div className="summary-stat">
-              <span>Active clients</span><strong>{activeClients.length}</strong>
-            </div>
-            <div className="summary-stat">
-              <span>Campaigns</span><strong>{campaigns.length}</strong>
-            </div>
-            <div className="summary-stat">
-              <span>Active team members</span><strong>{members.length}</strong>
-            </div>
-            <div className="summary-stat">
-              <span>Projects</span><strong>{projects.length}</strong>
-            </div>
-            <div className="summary-footnote">
-              <span className="status-dot" />
-              Based on saved workspace records
-            </div>
-          </article>
-        </section>
-
-        <section className="owner-overview-grid">
-          <article className="panel owner-stat-panel">
-            <div className="owner-stat-icon overdue"><AlertTriangle size={20} /></div>
-            <div>
-              <p>Overdue tasks</p>
-              <strong>{overdueTasks.length}</strong>
-              <span>Open tasks past their due date</span>
-            </div>
-          </article>
-          <article className="panel owner-stat-panel">
-            <div className="owner-stat-icon upcoming"><Clock3 size={20} /></div>
-            <div>
-              <p>Due in 7 days</p>
-              <strong>{dueSoonTasks.length}</strong>
-              <span>Tasks needing attention soon</span>
-            </div>
-          </article>
-          <article className="panel owner-stat-panel">
-            <div className="owner-stat-icon approvals"><ClipboardCheck size={20} /></div>
-            <div>
-              <p>Pending approvals</p>
-              <strong>{pendingApprovals.length}</strong>
-              <span>Items awaiting review or changes</span>
-            </div>
-          </article>
-          <article className="panel owner-stat-panel">
-            <div className="owner-stat-icon completed"><CheckCircle2 size={20} /></div>
-            <div>
-              <p>Completed tasks</p>
-              <strong>{completedTasks.length}</strong>
-              <span>Completed tasks in loaded records</span>
-            </div>
-          </article>
-        </section>
-
-        <section className="dashboard-panels">
-          <article className="panel owner-list-panel">
-            <div className="panel-heading">
-              <div>
-                <h2>Needs attention</h2>
-                <p>Overdue work and outstanding approvals</p>
-              </div>
-              <AlertTriangle size={19} />
-            </div>
-
-            {overdueTasks.length === 0 && pendingApprovals.length === 0 ? (
-              <div className="owner-empty">
-                <CheckCircle2 size={22} />
-                <p>No overdue tasks or pending approvals found.</p>
-              </div>
-            ) : (
-              <div className="owner-list">
-                {overdueTasks.slice(0, 5).map((task) => (
-                  <div className="owner-list-item" key={task.id}>
-                    <span className="owner-list-symbol overdue">
-                      <Clock3 size={16} />
-                    </span>
-                    <div className="owner-list-copy">
-                      <strong>{task.title}</strong>
-                      <span>
-                        {clientNames.get(task.client_id) ?? "Client"} · Due{" "}
-                        {dateLabel(task.due_at)}
-                      </span>
-                    </div>
-                    <span className="owner-badge overdue">Overdue</span>
-                  </div>
-                ))}
-                {pendingApprovals.slice(0, 5).map((approval) => (
-                  <div className="owner-list-item" key={approval.id}>
-                    <span className="owner-list-symbol approvals">
-                      <ClipboardCheck size={16} />
-                    </span>
-                    <div className="owner-list-copy">
-                      <strong>{approval.title}</strong>
-                      <span>
-                        {clientNames.get(approval.client_id) ?? "Client"} ·{" "}
-                        {prettyStatus(approval.status)}
-                      </span>
-                    </div>
-                    <span className="owner-badge approvals">Review</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </article>
-
-          <article className="panel owner-list-panel">
-            <div className="panel-heading">
-              <div>
-                <h2>Upcoming work</h2>
-                <p>Open tasks sorted by due date</p>
-              </div>
-              <CalendarDays size={19} />
-            </div>
-
-            {openTasks.length === 0 ? (
-              <div className="owner-empty">
-                <CheckCircle2 size={22} />
-                <p>No open tasks found. New tasks will appear here.</p>
-              </div>
-            ) : (
-              <div className="owner-list">
-                {openTasks.slice(0, 8).map((task) => (
-                  <div className="owner-list-item" key={task.id}>
-                    <span className="owner-list-symbol upcoming">
-                      <ArrowUpRight size={16} />
-                    </span>
-                    <div className="owner-list-copy">
-                      <strong>{task.title}</strong>
-                      <span>
-                        {clientNames.get(task.client_id) ?? "Client"} ·{" "}
-                        {prettyStatus(task.status)} ·{" "}
-                        {task.assignee_id ? "Assigned" : "Unassigned"}
-                      </span>
-                    </div>
-                    <span className="owner-due">{dateLabel(task.due_at)}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </article>
+        <section className="kpi-grid" aria-label="Work overview">
+          <article className="kpi-card"><div className="kpi-topline"><span>All clients</span><span className="kpi-icon purple"><Users size={19} /></span></div><div className="kpi-value">{clients.length}</div><p className="kpi-detail">{activeCount} active · {onboardingCount} onboarding</p></article>
+          <article className="kpi-card"><div className="kpi-topline"><span>Open tasks</span><span className="kpi-icon blue"><ClipboardCheck size={19} /></span></div><div className="kpi-value">{openTasks.length}</div><p className="kpi-detail">Work still to be done</p></article>
+          <article className="kpi-card"><div className="kpi-topline"><span>Overdue</span><span className="kpi-icon orange"><AlertTriangle size={19} /></span></div><div className="kpi-value">{overdueTasks.length}</div><p className="kpi-detail">Past the due date</p></article>
+          <article className="kpi-card"><div className="kpi-topline"><span>Client reviews</span><span className="kpi-icon green"><ClipboardCheck size={19} /></span></div><div className="kpi-value">{pendingApprovals.length}</div><p className="kpi-detail">Awaiting a decision or changes</p></article>
         </section>
 
         <section className="panel owner-list-panel client-health-panel">
-          <div className="panel-heading">
-            <div>
-              <h2>Client overview</h2>
-<p>Quick visibility into each client&apos;s work and performance</p>
-            </div>
-            <Link href="/clients" className="panel-action">
-              Manage clients <ArrowUpRight size={15} />
-            </Link>
-          </div>
-
+          <div className="panel-heading"><div><h2>Clients</h2><p>Open a client to see their tasks, overdue work, requests, and reviews.</p></div><Link href="/clients" className="panel-action">Manage clients <ArrowUpRight size={15} /></Link></div>
           {clients.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-state-icon"><Users size={24} /></div>
-              <h3>No clients yet</h3>
-              <p>Add your first client to begin organizing projects and campaigns.</p>
-              <Link href="/clients" className="primary-link">Open client management</Link>
-            </div>
+            <div className="empty-state"><div className="empty-state-icon"><Users size={24} /></div><h3>No clients yet</h3><p>Add your first client to start tracking work.</p><Link href="/clients" className="primary-link">Add your first client</Link></div>
           ) : (
-            <div className="table-scroll">
-              <table className="campaign-table">
-                <thead>
-                  <tr>
-                    <th>Client</th>
-                    <th>Status</th>
-                    <th>Campaigns</th>
-                    <th>Open tasks</th>
-                    <th>Overdue</th>
-                    <th>Pending approvals</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {clients.map((client) => {
-                    const clientCampaigns = campaigns.filter(
-                      (campaign) => campaign.client_id === client.id
-                    ).length;
-                    const clientOpenTasks = openTasks.filter(
-                      (task) => task.client_id === client.id
-                    );
-                    const clientOverdue = overdueTasks.filter(
-                      (task) => task.client_id === client.id
-                    ).length;
-                    const clientPendingApprovals = pendingApprovals.filter(
-                      (approval) => approval.client_id === client.id
-                    ).length;
-
-                    return (
-                      <tr key={client.id}>
-                        <td><strong>{client.name}</strong></td>
-                        <td>
-                          <span className="campaign-status">
-                            {prettyStatus(client.status ?? "unknown")}
-                          </span>
-                        </td>
-                        <td>{clientCampaigns}</td>
-                        <td>{clientOpenTasks.length}</td>
-                        <td>
-                          <span className={clientOverdue > 0 ? "owner-badge overdue" : "owner-badge completed"}>
-                            {clientOverdue}
-                          </span>
-                        </td>
-                        <td>{clientPendingApprovals}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+            <div className="table-scroll"><table className="campaign-table"><thead><tr><th>Client</th><th>Status</th><th>Open tasks</th><th>Overdue</th><th>Client review</th></tr></thead><tbody>
+              {clients.map((client) => <tr key={client.id}>
+                <td><Link href={`/clients/${client.id}`}><strong>{client.name}</strong></Link></td>
+                <td><span className="campaign-status">{prettyStatus(client.status ?? "unknown")}</span></td>
+                <td>{clientTasks(client.id).length}</td>
+                <td><span className={clientOverdues(client.id).length ? "owner-badge overdue" : "owner-badge completed"}>{clientOverdues(client.id).length}</span></td>
+                <td>{clientReviews(client.id).length}</td>
+              </tr>)}
+            </tbody></table></div>
           )}
         </section>
 
-        <section className="panel campaign-panel">
-          <div className="panel-heading">
-            <div>
-              <h2>Campaign performance</h2>
-              <p>Ranked by ad spend · last 30 days</p>
-            </div>
-            <span className="table-count">{campaigns.length} total</span>
-          </div>
-
-          {topCampaigns.length > 0 ? (
-            <div className="table-scroll">
-              <table className="campaign-table">
-                <thead>
-                  <tr>
-                    <th>Campaign</th>
-                    <th>Platform</th>
-                    <th>Status</th>
-                    <th>Spend</th>
-                    <th>Leads</th>
-                    <th>CPL</th>
-                    <th>Conversions</th>
-                    <th>ROAS</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {topCampaigns.map((campaign) => {
-                    const campaignCpl =
-                      campaign.totals.leads > 0
-                        ? campaign.totals.spend / campaign.totals.leads
-                        : null;
-                    const campaignRoas =
-                      campaign.totals.spend > 0
-                        ? campaign.totals.revenue / campaign.totals.spend
-                        : null;
-
-                    return (
-                      <tr key={campaign.id}>
-                        <td>
-                          <strong>{campaign.name}</strong>
-                          <span className="table-subtitle">
-                            {clientNames.get(campaign.client_id) ?? "Client"}
-                          </span>
-                        </td>
-                        <td>{platformName(campaign.platform)}</td>
-                        <td>
-                          <span className="campaign-status">
-                            {prettyStatus(campaign.status)}
-                          </span>
-                        </td>
-                        <td>{money(campaign.totals.spend, currency)}</td>
-                        <td>{compactNumber(campaign.totals.leads)}</td>
-                        <td>
-                          {campaignCpl === null
-                            ? "—"
-                            : money(campaignCpl, currency)}
-                        </td>
-                        <td>{compactNumber(campaign.totals.conversions)}</td>
-                        <td>
-                          {campaignRoas === null
-                            ? "—"
-                            : `${campaignRoas.toFixed(2)}×`}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="empty-state">
-              <div className="empty-state-icon"><BarChart3 size={24} /></div>
-              <h3>No campaigns to report yet</h3>
-              <p>
-                Campaigns and stored daily metrics will appear here when
-                reporting data is available.
-              </p>
-            </div>
+        <section className="panel owner-list-panel">
+          <div className="panel-heading"><div><h2>Needs attention</h2><p>Late work and tasks due soon.</p></div><span className="table-count">{attentionTasks.length}</span></div>
+          {!attentionTasks.length ? <div className="empty-state"><h3>Nothing urgent right now</h3><p>Overdue and upcoming tasks will appear here.</p></div> : (
+            <div className="owner-task-list">{attentionTasks.map((task) => <div className="owner-task-row" key={task.id}>
+              <div className="owner-task-main"><strong>{task.title}</strong><span>{clientNames.get(task.client_id) ?? "Client"} · {task.status.replaceAll("_", " ")}</span></div>
+              <span className={task.due_at && task.due_at.slice(0, 10) < todayDate ? "owner-badge overdue" : "owner-badge"}>{dateLabel(task.due_at)}</span>
+              <Link href={`/clients/${task.client_id}`} className="panel-action">Open</Link>
+            </div>)}</div>
           )}
         </section>
 
-        <footer className="dashboard-footer">
-          <span>Growth OS · Agency command center</span>
-          <span><span className="status-dot" /> Connected to your workspace</span>
-        </footer>
+        <footer className="dashboard-footer"><span>Growth OS · Agency workspace</span><span><span className="status-dot" /> Your client work, in one place</span></footer>
       </section>
     </main>
   );
