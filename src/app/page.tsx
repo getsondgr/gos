@@ -87,6 +87,8 @@ export default async function HomePage() {
   const agencyId = memberships?.[0]?.agency_id;
 
   if (!agencyId) {
+    const { data: clientMembership } = await supabase.from("client_members").select("client_id").eq("user_id", user.id).eq("status", "active").limit(1).maybeSingle();
+    if (clientMembership) redirect("/portal");
     return (
       <main className="dashboard-page">
         <header className="dashboard-topbar">
