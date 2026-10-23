@@ -73,6 +73,20 @@ async function createRequest(form: FormData) {
   redirect(`/clients/${clientId}?success=request`);
 }
 
+async function updateRequest(form: FormData) {
+  "use server";
+  const { supabase, membership } = await context();
+  const clientId = String(form.get("client_id") ?? "");
+  const ticketId = String(form.get("ticket_id") ?? "");
+  const status = String(form.get("status") ?? "");
+  const allowed = ["submitted", "under_review", "awaiting_client", "approved", "in_progress", "completed", "rejected", "canceled"];
+  if (!clientId || !ticketId || !allowed.includes(status)) redirect(`/clients/${clientId}?error=request-update`);
+  const { error } = await supabase.from("tickets").update({ status }).eq("id", ticketId).eq("client_id", clientId).eq("agency_id", membership.agency_id);
+  if (error) redirect(`/clients/${clientId}?error=request-update`);
+  revalidatePath(`/clients/${clientId}`);
+  redirect(`/clients/${clientId}?success=request-update`);
+}
+
 async function addReply(form: FormData) {
   "use server";
   const { supabase, user, membership } = await context();
@@ -127,10 +141,10 @@ export default async function ClientRoomPage({ params, searchParams }: {
   }
   const messages: Record<string,string> = {
     "success=task":"Action item created and shared.", "success=update":"Action status updated.",
-    "success=request":"Client request created.", "success=reply":"Reply added.",
+    "success=request":"Client request created.", "success=reply":"Reply added.", "success=request-update":"Request status updated.",
     "error=task":"Could not create action. Check the fields and database permissions.",
     "error=update":"Could not update this action.", "error=request":"Could not create request.",
-    "error=reply":"Could not add reply. Check database permissions."
+    "error=reply":"Could not add reply. Check database permissions.", "error=request-update":"Could not update request status."
   };
   const messageKey = Object.keys(messages).find(k => { const [a,b] = k.split("="); return String(query[a] ?? "") === b; });
 
@@ -151,7 +165,7 @@ export default async function ClientRoomPage({ params, searchParams }: {
       {!tasks.length ? <div className="clients-empty"><strong>No action items yet</strong><p>Create the first action above to get work moving.</p></div> : <div className="client-room-record-list">{tasks.map(t=><article className="client-room-record" key={t.id}><div className="client-room-record-copy"><strong>{t.title}</strong>{t.description && <p>{t.description}</p>}<span>{label(t.priority)} priority · Due {dateLabel(t.due_at)} · {label(t.visibility)}</span></div><form action={updateTask} className="client-room-inline-form"><input type="hidden" name="client_id" value={id}/><input type="hidden" name="task_id" value={t.id}/><label className="sr-only" htmlFor={`status-${t.id}`}>Status for {t.title}</label><select id={`status-${t.id}`} name="status" defaultValue={t.status}>{STATUSES.map(s=><option key={s} value={s}>{label(s)}</option>)}</select><SubmitButton className="clients-secondary" pendingText="Saving…">Save</SubmitButton></form></article>)}</div>}
     </section>
     <section className="clients-panel"><div className="client-room-section-heading"><div><h2>Requests & replies</h2><p className="clients-panel-subtitle">Replies created here are client-visible; internal notes are not shown.</p></div><span className="client-room-count">{openTickets.length} open</span></div>
-      {!tickets.length ? <div className="clients-empty"><strong>No requests yet</strong><p>Create a request above to start a trackable conversation.</p></div> : <div className="client-room-record-list">{tickets.map(t=><article className="client-room-ticket" key={t.id}><div className="client-room-section-heading"><div><strong>{t.title}</strong><p className="client-room-record-meta">Request #{t.ticket_number} · {label(t.priority)} · {label(t.status)} · {dateLabel(t.created_at)}</p></div><span className={`clients-status ${t.status === "completed" ? "active" : "onboarding"}`}>{label(t.status)}</span></div>{t.description && <p className="client-room-ticket-description">{t.description}</p>}<div className="client-room-comments">{comments.filter(c=>c.ticket_id===t.id).map(c=><div className="client-room-comment" key={c.id}><p>{c.body}</p><span>{c.author_id===user.id ? "You" : "Agency team"} · {new Date(c.created_at).toLocaleString("en-IN",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}</span></div>)}</div><form action={addReply} className="client-room-reply-form"><input type="hidden" name="client_id" value={id}/><input type="hidden" name="ticket_id" value={t.id}/><label>Reply (visible to client)<textarea name="body" required maxLength={3000} rows={2} placeholder="Write a clear update or response…"/></label><SubmitButton className="clients-secondary" pendingText="Sending reply…">Add reply</SubmitButton></form></article>)}</div>}
+      {!tickets.length ? <div className="clients-empty"><strong>No requests yet</strong><p>Create a request above to start a trackable conversation.</p></div> : <div className="client-room-record-list">{tickets.map(t=><article className="client-room-ticket" key={t.id}><div className="client-room-section-heading"><div><strong>{t.title}</strong><p className="client-room-record-meta">Request #{t.ticket_number} · {label(t.priority)} · {label(t.status)} · {dateLabel(t.created_at)}</p></div><form action={updateRequest} className="client-room-inline-form"><input type="hidden" name="client_id" value={id}/><input type="hidden" name="ticket_id" value={t.id}/><label className="sr-only" htmlFor={`request-status-${t.id}`}>Status for request {t.title}</label><select id={`request-status-${t.id}`} name="status" defaultValue={t.status}><option value="submitted">Submitted</option><option value="under_review">Under review</option><option value="awaiting_client">Awaiting client</option><option value="approved">Approved</option><option value="in_progress">In progress</option><option value="completed">Completed</option><option value="rejected">Rejected</option><option value="canceled">Canceled</option></select><SubmitButton className="clients-secondary" pendingText="Saving…">Save</SubmitButton></form></div>{t.description && <p className="client-room-ticket-description">{t.description}</p>}<div className="client-room-comments">{comments.filter(c=>c.ticket_id===t.id).map(c=><div className="client-room-comment" key={c.id}><p>{c.body}</p><span>{c.author_id===user.id ? "You" : "Agency team"} · {new Date(c.created_at).toLocaleString("en-IN",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}</span></div>)}</div><form action={addReply} className="client-room-reply-form"><input type="hidden" name="client_id" value={id}/><input type="hidden" name="ticket_id" value={t.id}/><label>Reply (visible to client)<textarea name="body" required maxLength={3000} rows={2} placeholder="Write a clear update or response…"/></label><SubmitButton className="clients-secondary" pendingText="Sending reply…">Add reply</SubmitButton></form></article>)}</div>}
     </section>
     <section className="clients-panel"><h2>Approvals</h2><p className="clients-panel-subtitle">Approval status from existing records. Approval actions can be added after this workflow is verified.</p>{!approvals.length ? <div className="clients-empty"><strong>No approvals yet</strong><p>Approval requests will appear here when submitted.</p></div> : <div className="client-room-record-list">{approvals.map(a=><article className="client-room-record" key={a.id}><div className="client-room-record-copy"><strong>{a.title}</strong><span>Submitted {dateLabel(a.submitted_at)}</span>{a.review_comment && <p>{a.review_comment}</p>}</div><span className={`clients-status ${a.status==="approved"?"active":"onboarding"}`}>{label(a.status)}</span></article>)}</div>}</section>
   </div></main>;
