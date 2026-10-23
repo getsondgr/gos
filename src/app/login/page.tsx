@@ -14,8 +14,7 @@ export default function LoginPage() {
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
-    setMessage("Sign-in successful. Opening Growth OS...");
-window.location.href = "/";
+    setMessage("");
 
     try {
       const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -26,7 +25,7 @@ window.location.href = "/";
       }
 
       const supabase = createBrowserClient(url, key);
-      
+
       if (mode === "signup") {
         const { error } = await supabase.auth.signUp({
           email,
@@ -36,24 +35,37 @@ window.location.href = "/";
           },
         });
 
-        if (error) throw error;
+        if (error) {
+          throw error;
+        }
 
         setMessage(
           "Account request submitted. Check your email if confirmation is required."
         );
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
 
-        if (error) throw error;
+        if (error) {
+          throw error;
+        }
 
-        window.location.href = "/";
+        if (!data.session) {
+          throw new Error("Login succeeded but no session was returned.");
+        }
+
+        setMessage("Sign-in successful. Opening Growth OS...");
+
+        // Navigate only after Supabase has returned a valid session.
+        window.location.assign("/");
       }
     } catch (error) {
       setMessage(
-        error instanceof Error ? error.message : "Something went wrong."
+        error instanceof Error
+          ? error.message
+          : "Something went wrong. Please try again."
       );
     } finally {
       setLoading(false);
@@ -63,10 +75,16 @@ window.location.href = "/";
   return (
     <main className="auth-page">
       <section className="auth-card">
-        <div className="auth-brand">growth<span>os</span></div>
+        <div className="auth-brand">
+          growth<span>os</span>
+        </div>
+
         <p className="auth-eyebrow">YOUR AGENCY COMMAND CENTER</p>
 
-        <h1>{mode === "login" ? "Welcome back" : "Create your account"}</h1>
+        <h1>
+          {mode === "login" ? "Welcome back" : "Create your account"}
+        </h1>
+
         <p className="auth-subtitle">
           {mode === "login"
             ? "Sign in to continue to Growth OS."
@@ -81,7 +99,7 @@ window.location.href = "/";
             autoComplete="email"
             required
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(event) => setEmail(event.target.value)}
             placeholder="you@company.com"
           />
 
@@ -95,7 +113,7 @@ window.location.href = "/";
             minLength={8}
             required
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(event) => setPassword(event.target.value)}
             placeholder="At least 8 characters"
           />
 
@@ -108,12 +126,17 @@ window.location.href = "/";
           </button>
         </form>
 
-        {message && <p className="auth-message" role="status">{message}</p>}
+        {message && (
+          <p className="auth-message" role="status">
+            {message}
+          </p>
+        )}
 
         <p className="auth-switch">
           {mode === "login"
             ? "New to Growth OS? "
             : "Already have an account? "}
+
           <button
             type="button"
             onClick={() => {
@@ -128,4 +151,3 @@ window.location.href = "/";
     </main>
   );
 }
-
