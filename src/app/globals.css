@@ -1661,3 +1661,45 @@
 @media(max-width:900px){.dashboard-sidebar{width:218px;flex-basis:218px;padding-inline:12px}.dashboard-main{padding-inline:20px}}
 @media(max-width:700px){.dashboard-page{display:block}.dashboard-sidebar{position:relative;width:100%;height:auto;min-height:0;padding:17px 14px;display:flex;flex-direction:row;align-items:center;gap:8px;overflow-x:auto}.dashboard-brand{padding:0 6px;font-size:22px}.sidebar-label,.sidebar-bottom{display:none}.sidebar-link{flex:0 0 auto;min-height:36px;padding:0 10px;font-size:11px}.dashboard-main{padding:24px 15px}.dashboard-topbar{align-items:flex-start;flex-direction:column;gap:16px}.dashboard-topbar h1{font-size:36px;letter-spacing:-1.8px}}
 @media(prefers-reduced-motion:reduce){.sidebar-link,.kpi-card,.clients-stat,.clients-primary{transition:none}}
+
+
+/* Agency overview: multi-client daily work dashboard */
+.agency-kpi-grid{grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:16px}
+.agency-work-types{margin-bottom:16px}
+.work-type-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:20px}
+.work-type-card{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px;border:1px solid var(--gos-line);border-radius:9px;background:#f1f2e9;color:#55594d;font-size:12px}
+.work-type-card strong{font-size:24px;letter-spacing:-1px;color:var(--gos-ink)}
+.work-type-card.work-type-todo{background:#f0f0e8}
+.work-type-card.work-type-progress{background:#e8edda}
+.work-type-card.work-type-review{background:#fff0dc}
+.work-type-card.work-type-blocked{background:#f7e4df}
+.agency-client-section{margin-bottom:16px}
+.agency-client-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;margin-top:20px}
+.agency-client-card{min-width:0;display:flex;flex-direction:column;padding:19px;border:1px solid var(--gos-line);border-radius:11px;background:#fffef9;transition:transform .18s ease,border-color .18s ease}
+.agency-client-card:hover{transform:translateY(-2px);border-color:#a8b77a}
+.agency-client-card-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.agency-client-index{color:#9a9d8f;font-size:10px;font-weight:800;letter-spacing:1px}
+.agency-active-status{background:#e9eddb;color:#53632a}
+.agency-client-card h3{margin:17px 0 15px;color:var(--gos-ink);font-size:22px;line-height:1.1;letter-spacing:-.8px;overflow-wrap:anywhere}
+.agency-client-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;padding:12px 0;border-top:1px solid var(--gos-line);border-bottom:1px solid var(--gos-line)}
+.agency-client-metrics>div{display:flex;flex-direction:column;gap:5px;min-width:0}
+.agency-client-metrics strong{color:var(--gos-ink);font-size:22px;letter-spacing:-1px}
+.agency-client-metrics span{color:#777b70;font-size:10px}
+.agency-client-next{padding:14px 0 13px;flex:1}
+.agency-client-next-heading{display:flex;justify-content:space-between;gap:8px;margin-bottom:8px;color:#777b70;font-size:10px;font-weight:750}
+.agency-client-next-heading span:last-child{color:#6c7c32}
+.agency-mini-task{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #eeeee6;min-width:0}
+.agency-task-dot{width:7px;height:7px;flex:0 0 7px;border-radius:50%;background:#b5c66e}
+.agency-task-dot.is-blocked{background:#d86c5b}
+.agency-task-dot.is-review{background:#e2a34f}
+.agency-mini-task-title{min-width:0;flex:1;overflow:hidden;color:#34372e;font-size:11px;text-overflow:ellipsis;white-space:nowrap}
+.agency-mini-task-status{flex:0 0 auto;color:#8b8e81;font-size:9px;text-transform:capitalize}
+.agency-no-tasks{margin:0;padding:8px 0;color:#85897d;font-size:11px;line-height:1.5}
+.agency-client-footer{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-top:13px;border-top:1px solid var(--gos-line)}
+.agency-client-footer>span{display:flex;align-items:center;gap:5px;color:#777b70;font-size:10px}
+.agency-client-footer>a{display:inline-flex;align-items:center;gap:4px;color:var(--gos-ink);font-size:11px;font-weight:800;text-decoration:none}
+.agency-client-footer>a:hover{color:#6c7c32}
+.agency-attention-panel{margin-bottom:14px}
+@media(max-width:1150px){.agency-client-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.agency-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:680px){.work-type-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.agency-client-grid{grid-template-columns:1fr}.agency-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.agency-client-card h3{font-size:20px}}
+@media(prefers-reduced-motion:reduce){.agency-client-card{transition:none}}
