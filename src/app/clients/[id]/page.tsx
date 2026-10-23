@@ -179,7 +179,7 @@ export default async function ClientRoomPage({ params, searchParams }: {
   const messageKey = Object.keys(messages).find(k => { const [a,b] = k.split("="); return String(query[a] ?? "") === b; });
 
   return <main className="clients-page"><div className="clients-shell">
-    <header className="clients-header"><div><Link href="/clients" className="client-room-back">← All clients</Link><p className="clients-breadcrumb">GROWTH OS / CLIENT ROOM</p><h1>{client.name}</h1><p>{client.industry || "Client workspace"} · {label(client.status)} · {client.currency || "INR"}</p></div><Link href="/clients" className="clients-button clients-secondary">All clients</Link></header>
+    <header className="clients-header"><div><Link href="/clients" className="client-room-back">← All clients</Link><p className="clients-breadcrumb">GROWTH OS / CLIENT ROOM</p><h1>{client.name}</h1><p>{client.industry || "Client workspace"} · {label(client.status)} · {client.currency || "INR"}</p></div><div className="client-header-actions"><Link href={`/clients/${id}/preview`} className="clients-button clients-primary">Preview client portal ↗</Link><Link href="/portal" className="clients-button clients-secondary">Portal URL ↗</Link><Link href="/clients" className="clients-button clients-secondary">All clients</Link></div></header>
     {messageKey && <p role="status" className={messageKey.startsWith("error=") ? "clients-message clients-error" : "clients-message"}>{messages[messageKey]}</p>}
     <section className="clients-stats">{[
       {label:"Open actions",value:openTasks.length,detail:`${overdue.length} overdue`},
