@@ -85,7 +85,6 @@ export default async function HomePage() {
   }
 
   const agencyId = memberships?.[0]?.agency_id;
-  const currentRole = memberships?.[0]?.role ?? "team member";
 
   if (!agencyId) {
     return (
