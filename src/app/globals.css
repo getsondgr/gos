@@ -1482,3 +1482,35 @@
   .clients-shell { padding: 24px 14px 34px; }
   .clients-header h1 { font-size: 30px; }
 }
+
+
+/* Client portal */
+.portal-page .clients-shell { max-width: 1180px; }
+.portal-welcome {
+  display:flex; justify-content:space-between; align-items:center; gap:20px;
+  padding:28px 30px; margin: 24px 0 20px; border:1px solid #e1e6f4; border-radius:18px;
+  background:linear-gradient(120deg,#fff 0%,#f7f8ff 100%);
+  box-shadow:0 6px 22px rgba(31,45,85,.04);
+}
+.portal-welcome h2 { margin:10px 0 8px; font-size:clamp(21px,2.4vw,28px); letter-spacing:-.9px; color:#1e2941; }
+.portal-welcome p { margin:0; color:#78849a; font-size:13px; line-height:1.6; }
+.portal-overline { color:#6975dc; font-size:9px; font-weight:800; letter-spacing:1.1px; }
+.portal-stats { gap:14px; }
+.portal-stats .clients-stat { position:relative; overflow:hidden; }
+.portal-stats .clients-stat:before { content:""; position:absolute; inset:0 auto 0 0; width:3px; background:#6975e8; opacity:.65; }
+.portal-stats .clients-stat-value { display:block; margin-bottom:6px; }
+.portal-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; padding:36px 20px; text-align:center; }
+.portal-empty strong { color:#27334b; font-size:14px; }
+.portal-empty p { margin:0; color:#8993a6; font-size:12px; line-height:1.65; }
+.portal-empty-mark { display:grid; place-items:center; width:36px; height:36px; border-radius:50%; background:#e8f8f0; color:#16865d; font-weight:800; }
+.portal-approval { display:grid; grid-template-columns:minmax(0,1fr) minmax(280px,.85fr); gap:26px; padding:22px 0; border-top:1px solid #edf0f5; }
+.portal-decision-form { display:grid; gap:12px; }
+.portal-decision-form label { display:block; color:#4f5b72; font-size:11px; font-weight:700; }
+.portal-decision-form select, .portal-decision-form textarea { display:block; width:100%; box-sizing:border-box; margin-top:7px; padding:11px 12px; border:1px solid #dfe5ef; border-radius:10px; background:#fff; color:#202940; font:inherit; font-size:12px; }
+.portal-decision-form textarea { resize:vertical; line-height:1.55; }
+.portal-decision-form select:focus, .portal-decision-form textarea:focus { outline:none; border-color:#8490f5; box-shadow:0 0 0 4px rgba(88,101,232,.11); }
+.portal-decision-form button { justify-self:start; }
+@media(max-width:760px) {
+  .portal-welcome { align-items:flex-start; flex-direction:column; padding:22px; }
+  .portal-approval { grid-template-columns:1fr; gap:16px; }
+}
