@@ -63,7 +63,7 @@ async function createRequest(form: FormData) {
   const { data: client } = await supabase.from("clients").select("id").eq("id", clientId).eq("agency_id", membership.agency_id).maybeSingle();
   if (!client) notFound();
   const { error } = await supabase.from("tickets").insert({
-    agency_id: membership.agency_id, client_id: clientId, title, description: description || null,
+    agency_id: membership.agency_id, client_id: clientId, title, description: description || title,
     category: "general", priority: ["low","normal","high","urgent"].includes(priority) ? priority : "normal",
     status: "submitted", created_by: user.id
   });
