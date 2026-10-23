@@ -148,7 +148,7 @@ export default async function HomePage() {
     return (
       <main className="dashboard-page">
         <div className="dashboard-error">
-          <h1>We couldn't load your workspace</h1>
+<h1>We couldn&apos;t load your workspace</h1>
           <p>Check your agency membership and Supabase permissions.</p>
         </div>
       </main>
@@ -739,7 +739,7 @@ export default async function HomePage() {
           <div className="panel-heading">
             <div>
               <h2>Client overview</h2>
-              <p>Quick visibility into each client's work and performance</p>
+<p>Quick visibility into each client&apos;s work and performance</p>
             </div>
             <Link href="/clients" className="panel-action">
               Manage clients <ArrowUpRight size={15} />
