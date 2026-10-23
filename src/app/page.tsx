@@ -179,6 +179,8 @@ export default async function HomePage() {
         <p className="sidebar-label">WORKSPACE</p>
         <Link className="sidebar-link active" href="/"><BriefcaseBusiness size={18} /> Overview</Link>
         <Link className="sidebar-link" href="/clients"><Users size={18} /> Clients</Link>
+        <Link className="sidebar-link" href="/tasks"><ClipboardCheck size={18} /> Tasks & calendar</Link>
+        <Link className="sidebar-link" href="/settings"><BriefcaseBusiness size={18} /> Service templates</Link>
         <div className="sidebar-bottom">
           <div className="user-avatar">{(user.email?.[0] ?? "G").toUpperCase()}</div>
           <div className="user-info"><strong>{user.email}</strong><span>{agency?.name ?? "Agency workspace"}</span></div>
