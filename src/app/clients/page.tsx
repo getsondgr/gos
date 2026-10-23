@@ -58,11 +58,18 @@ async function createClientAction(formData: FormData) {
   const status = String(formData.get("status") ?? "onboarding");
   const timezone = String(formData.get("timezone") ?? "Asia/Kolkata");
   const currency = String(formData.get("currency") ?? "INR").toUpperCase();
+  const startDate = String(formData.get("start_date") ?? new Date().toISOString().slice(0, 10));
+  const launchDate = String(formData.get("launch_date") ?? "");
+  const services = formData.getAll("services").map(String).filter((service) =>
+    ["social_media", "content_approvals", "campaign_management"].includes(service)
+  );
 
   if (
     !name ||
     !/^[A-Z]{3}$/.test(currency) ||
-    !STATUSES.includes(status as ClientStatus)
+    !STATUSES.includes(status as ClientStatus) ||
+    !/^\\d{4}-\\d{2}-\\d{2}$/.test(startDate) ||
+    (launchDate && !/^\\d{4}-\\d{2}-\\d{2}$/.test(launchDate))
   ) {
     redirect("/clients?error=invalid");
   }
@@ -76,7 +83,7 @@ async function createClientAction(formData: FormData) {
       .replace(/^-|-$/g, "")
       .slice(0, 70) || `client-${Date.now()}`;
 
-  const { error } = await supabase.from("clients").insert({
+  const { data: createdClient, error } = await supabase.from("clients").insert({
     agency_id: agencyId,
     name,
     slug: `${slug}-${crypto.randomUUID().slice(0, 8)}`,
@@ -84,11 +91,66 @@ async function createClientAction(formData: FormData) {
     status,
     timezone,
     currency,
-  });
+  }).select("id").single();
 
-  if (error) redirect("/clients?error=create");
+  if (error || !createdClient) redirect("/clients?error=create");
+
+  const addDays = (date: string, offset: number) => {
+    const d = new Date(`${date}T12:00:00.000Z`);
+    d.setUTCDate(d.getUTCDate() + offset);
+    return d.toISOString().slice(0, 10);
+  };
+  const dueAt = (date: string) => new Date(`${date}T23:59:00.000Z`).toISOString();
+  const plan: { title: string; description: string; due: string; priority?: string }[] = [];
+  if (services.includes("social_media")) {
+    plan.push(
+      { title: "Collect brand assets and social account access", description: "Confirm logo, brand guidelines, account access, target audience and business goals.", due: startDate },
+      { title: "Confirm social media strategy and content pillars", description: "Depends on onboarding details and brand assets.", due: addDays(startDate, 1) },
+      { title: "Plan the first content calendar", description: "Set post dates, formats, themes, captions and publishing owners.", due: addDays(startDate, 2) },
+      { title: "Schedule approved social content", description: "Only schedule content that has completed client approval.", due: addDays(startDate, 4) },
+      { title: "Weekly social content and account check", description: "Review upcoming posts, publishing status and missing assets.", due: addDays(startDate, 7) }
+    );
+  }
+  if (services.includes("content_approvals")) {
+    plan.push(
+      { title: "Prepare first batch of content creatives", description: "Create the initial images/videos and captions from the approved brief.", due: addDays(startDate, 2) },
+      { title: "Submit content batch for client approval", description: "Share each creative and caption for approval in the client workspace.", due: addDays(startDate, 3) },
+      { title: "Apply client feedback and prepare final versions", description: "Keep the original version and record all requested changes.", due: addDays(startDate, 4) }
+    );
+  }
+  if (services.includes("campaign_management")) {
+    const launch = launchDate || addDays(startDate, 7);
+    plan.push(
+      { title: "Confirm campaign objective, offer, budget and audience", description: "Campaign foundation. Confirm all inputs with the client.", due: startDate },
+      { title: "Prepare campaign angles, ad copy and creatives", description: "Requires approved campaign brief and offer.", due: addDays(launch, -5) },
+      { title: "Configure campaign and conversion tracking", description: "Set campaign structure, landing page, conversion events and lead routing.", due: addDays(launch, -4) },
+      { title: "Submit campaign creatives for client approval", description: "Campaign must not launch until required creative approvals are recorded.", due: addDays(launch, -3) },
+      { title: "Test landing page, forms, tracking and lead routing", description: "Verify the full conversion journey before launch.", due: addDays(launch, -3) },
+      { title: "Complete launch readiness checklist", description: "Confirm approvals, budget, targeting, links, tracking and assigned launch owner.", due: addDays(launch, -1), priority: "urgent" },
+      { title: "Launch campaign and verify delivery", description: "Launch only after all required approvals and technical checks are complete.", due: launch, priority: "urgent" },
+      { title: "First campaign delivery check", description: "Confirm spend, impressions, clicks, conversion tracking and lead flow.", due: addDays(launch, 1) },
+      { title: "Initial campaign performance review", description: "Review early delivery and identify any issues requiring action.", due: addDays(launch, 3) }
+    );
+  }
+
+  if (plan.length) {
+    const { error: taskError } = await supabase.from("tasks").insert(plan.map((task) => ({
+      agency_id: agencyId,
+      client_id: createdClient.id,
+      title: task.title,
+      description: task.description,
+      status: "todo",
+      priority: task.priority ?? "normal",
+      due_at: dueAt(task.due),
+      visibility: "client_visible",
+      created_by: user.id
+    })));
+    if (taskError) redirect("/clients?error=plan");
+  }
+
+  revalidatePath("/");
   revalidatePath("/clients");
-  redirect("/clients?created=1");
+  redirect(`/clients?created=1&tasks=${plan.length}`);
 }
 
 async function updateClientAction(formData: FormData) {
@@ -205,12 +267,13 @@ export default async function ClientsPage({
   });
 
   const messages: Record<string, string> = {
-    "created=1": "Client created successfully.",
+    "created=1": `Client created and onboarding plan generated (${String(params.tasks ?? "0")} tasks). `,
     "updated=1": "Client updated successfully.",
     "deleted=1": "Client deleted successfully.",
     "error=workspace": "Your agency membership could not be found.",
     "error=invalid": "Please check the information you entered.",
     "error=create": "Client could not be created. Check database permissions and unique constraints.",
+    "error=plan": "Client was created, but the service plan could not be generated. Open the client and check task permissions.",
     "error=update": "Client could not be updated. Check database permissions.",
     "error=delete": "Client could not be deleted. It may be linked to campaigns or invoices.",
   };
@@ -283,6 +346,21 @@ export default async function ClientsPage({
                 <option value="America/New_York">New York</option>
               </select>
             </label>
+            <label>
+              Service start date
+              <input name="start_date" type="date" defaultValue={new Date().toISOString().slice(0, 10)} required />
+            </label>
+            <label>
+              Planned campaign launch (optional)
+              <input name="launch_date" type="date" />
+            </label>
+            <fieldset className="service-template-picker">
+              <legend>Services & auto-generated work plan</legend>
+              <label><input type="checkbox" name="services" value="social_media" defaultChecked /> Social media management</label>
+              <label><input type="checkbox" name="services" value="content_approvals" defaultChecked /> Content calendar & creative approvals</label>
+              <label><input type="checkbox" name="services" value="campaign_management" /> Campaign management</label>
+              <p>Selected services automatically create onboarding tasks, creative approval tasks and campaign launch checks with due dates.</p>
+            </fieldset>
             <label>
               Currency
               <select name="currency" defaultValue="INR">
