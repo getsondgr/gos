@@ -14,7 +14,7 @@ export default function LoginPage() {
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
-    setMessage("");
+    setMessage("Sign-in successful. Opening Growth OS...");
 
     try {
       const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
