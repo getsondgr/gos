@@ -1279,3 +1279,15 @@
   animation:growthos-spin .7s linear infinite;
 }
 @keyframes growthos-spin { to { transform:rotate(360deg); } }
+
+
+.page-loading-card {
+  min-height: 260px; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:12px; padding:36px; border:1px solid #e9ecf3; border-radius:15px; background:#fff; text-align:center;
+}
+.page-loading-card h1 { margin:4px 0 0; color:#202940; font-size:22px; }
+.page-loading-card p { margin:0; color:#737c8f; font-size:13px; line-height:1.6; }
+.page-loading-spinner {
+  width:28px; height:28px; border:3px solid #e4e7ff; border-top-color:#5865e8; border-radius:50%;
+  animation:growthos-spin .7s linear infinite;
+}
