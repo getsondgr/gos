@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import Link from "next/link";
 
 type MetricRow = {
   campaign_id: string;
@@ -336,9 +337,9 @@ export default async function HomePage() {
           growth<span>os</span>
         </div>
         <p className="sidebar-label">WORKSPACE</p>
-        <a className="sidebar-link active" href="/">
-          <BarChart3 size={18} /> Overview
-        </a>
+        <Link className="sidebar-link active" href="/">
+  <BarChart3 size={18} /> Overview
+</Link>
         <div className="sidebar-link muted">
           <Users size={18} /> Clients
           <span className="coming-soon">Next</span>
