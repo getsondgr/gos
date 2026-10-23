@@ -220,241 +220,166 @@ export default async function ClientsPage({
   })?.[0];
 
   return (
-    <main style={{ maxWidth: 1200, margin: "0 auto", padding: 28 }}>
-      <header style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "center", flexWrap: "wrap" }}>
-        <div>
-          <p style={{ color: "#6b63ed", fontWeight: 700, letterSpacing: 1 }}>GROWTH OS / WORKSPACE</p>
-          <h1 style={{ fontSize: 32, margin: "8px 0" }}>Client management</h1>
-          <p style={{ color: "#64748b" }}>Manage your agency’s client accounts.</p>
-        </div>
-        <Link href="/" style={{ padding: "10px 16px", border: "1px solid #ddd", borderRadius: 10, textDecoration: "none" }}>
-          ← Dashboard
-        </Link>
-      </header>
-
-      {messageKey && (
-        <p role="status" style={{ padding: 14, background: "#eef2ff", borderRadius: 10 }}>
-          {messages[messageKey]}
-        </p>
-      )}
-
-      {error && (
-        <p role="alert" style={{ padding: 14, background: "#fff1f2", borderRadius: 10 }}>
-          Could not load clients. Check the Supabase table permissions.
-        </p>
-      )}
-
-      <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 14, margin: "24px 0" }}>
-        {[
-          ["Total clients", clients.length],
-          ["Active", clients.filter((c) => c.status === "active").length],
-          ["Onboarding", clients.filter((c) => c.status === "onboarding").length],
-          ["Paused", clients.filter((c) => c.status === "paused").length],
-        ].map(([label, value]) => (
-          <article key={label} style={{ background: "white", border: "1px solid #e5e7eb", borderRadius: 14, padding: 18 }}>
-            <p style={{ color: "#64748b", margin: 0 }}>{label}</p>
-            <strong style={{ fontSize: 28 }}>{value}</strong>
-          </article>
-        ))}
-      </section>
-
-      <section style={{ background: "white", border: "1px solid #e5e7eb", borderRadius: 16, padding: 22, marginBottom: 24 }}>
-        <h2 style={{ marginTop: 0 }}>Add a client</h2>
-        <form action={createClientAction} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: 14 }}>
-          <label>
-            Client / company name *
-            <input name="name" required maxLength={120} placeholder="e.g. Acme Industries" style={inputStyle} />
-          </label>
-          <label>
-            Industry
-            <input name="industry" maxLength={100} placeholder="e.g. Healthcare" style={inputStyle} />
-          </label>
-          <label>
-            Status
-            <select name="status" defaultValue="onboarding" style={inputStyle}>
-              {STATUSES.map((status) => <option key={status} value={status}>{statusLabel(status)}</option>)}
-            </select>
-          </label>
-          <label>
-            Time zone
-            <select name="timezone" defaultValue="Asia/Kolkata" style={inputStyle}>
-              <option value="Asia/Kolkata">India (Asia/Kolkata)</option>
-              <option value="UTC">UTC</option>
-              <option value="Asia/Singapore">Singapore</option>
-              <option value="Europe/London">London</option>
-              <option value="America/New_York">New York</option>
-            </select>
-          </label>
-          <label>
-            Currency
-            <select name="currency" defaultValue="INR" style={inputStyle}>
-              <option value="INR">INR ₹</option>
-              <option value="USD">USD $</option>
-              <option value="GBP">GBP £</option>
-              <option value="EUR">EUR €</option>
-              <option value="SGD">SGD $</option>
-            </select>
-          </label>
-          <div style={{ display: "flex", alignItems: "end" }}>
-            <button type="submit" style={primaryButton}>+ Add client</button>
-          </div>
-        </form>
-      </section>
-
-      <section style={{ background: "white", border: "1px solid #e5e7eb", borderRadius: 16, padding: 22 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+    <main className="clients-page">
+      <div className="clients-shell">
+        <header className="clients-header">
           <div>
-            <h2 style={{ margin: 0 }}>Your clients</h2>
-            <p style={{ color: "#64748b" }}>{filtered.length} of {clients.length} clients</p>
+            <p className="clients-breadcrumb">GROWTH OS / WORKSPACE</p>
+            <h1>Clients</h1>
+            <p>Keep every client relationship, update, and next action in one place.</p>
           </div>
-          <form method="get" style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <input name="q" defaultValue={q} placeholder="Search name or industry" style={{ ...inputStyle, minWidth: 220 }} />
-            <select name="status" defaultValue={statusFilter} style={inputStyle}>
-              <option value="">All statuses</option>
-              {STATUSES.map((status) => <option key={status} value={status}>{statusLabel(status)}</option>)}
-            </select>
-            <button type="submit" style={secondaryButton}>Search</button>
-            <Link href="/clients" style={{ padding: "10px 14px", border: "1px solid #ddd", borderRadius: 9, textDecoration: "none" }}>Reset</Link>
-          </form>
-        </div>
+          <Link href="/" className="clients-button clients-secondary">← Dashboard</Link>
+        </header>
 
-        {filtered.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "40px 12px", color: "#64748b" }}>
-            <h3>{clients.length === 0 ? "No clients yet" : "No matching clients"}</h3>
-            <p>{clients.length === 0 ? "Add your first client using the form above." : "Try another search or status filter."}</p>
-          </div>
-        ) : (
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
-              <thead>
-                <tr>
-                  {["Client", "Industry", "Status", "Time zone", "Currency", "Created", "Actions"].map((heading) => (
-                    <th key={heading} style={tableHeader}>{heading}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((client) => (
-                  <tr key={client.id}>
-                    
-<td style={tableCell}>
-  <Link
-    href={`/clients/${client.id}`}
-    style={{
-      color: "#4f46e5",
-      fontWeight: 700,
-      textDecoration: "none",
-    }}
-  >
-    {client.name} →
-  </Link>
-  <div style={{ color: "#94a3b8", fontSize: 12 }}>
-    {client.slug}
-  </div>
-</td>
-
-                    <td style={tableCell}>{client.industry || "—"}</td>
-                    <td style={tableCell}>
-                      <span style={{ display: "inline-block", borderRadius: 20, padding: "5px 9px", background: client.status === "active" ? "#dcfce7" : client.status === "paused" ? "#fef3c7" : client.status === "archived" ? "#f1f5f9" : "#e0e7ff" }}>
-                        {statusLabel(client.status)}
-                      </span>
-                    </td>
-                    <td style={tableCell}>{client.timezone}</td>
-                    <td style={tableCell}>{client.currency}</td>
-                    <td style={tableCell}>{new Date(client.created_at).toLocaleDateString("en-IN")}</td>
-                    <td style={tableCell}>
-                      <details>
-                        <summary style={{ cursor: "pointer", color: "#4f46e5" }}>Edit / Delete</summary>
-                        <form action={updateClientAction} style={{ display: "grid", gap: 8, minWidth: 210, padding: "12px 0" }}>
-                          <input type="hidden" name="id" value={client.id} />
-                          <input name="name" required defaultValue={client.name} maxLength={120} style={inputStyle} />
-                          <input name="industry" defaultValue={client.industry ?? ""} placeholder="Industry" style={inputStyle} />
-                          <select name="status" defaultValue={client.status} style={inputStyle}>
-                            {STATUSES.map((status) => <option key={status} value={status}>{statusLabel(status)}</option>)}
-                          </select>
-                          <select name="timezone" defaultValue={client.timezone} style={inputStyle}>
-                            <option value="Asia/Kolkata">India</option>
-                            <option value="UTC">UTC</option>
-                            <option value="Asia/Singapore">Singapore</option>
-                            <option value="Europe/London">London</option>
-                            <option value="America/New_York">New York</option>
-                          </select>
-                          <select name="currency" defaultValue={client.currency} style={inputStyle}>
-                            <option value="INR">INR</option>
-                            <option value="USD">USD</option>
-                            <option value="GBP">GBP</option>
-                            <option value="EUR">EUR</option>
-                            <option value="SGD">SGD</option>
-                          </select>
-                          <button type="submit" style={primaryButton}>Save changes</button>
-                        </form>
-                        <form action={deleteClientAction}>
-                          <input type="hidden" name="id" value={client.id} />
-                          <button type="submit" style={dangerButton}>Delete client</button>
-                        </form>
-                      </details>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        {messageKey && (
+          <p role="status" className="clients-message">{messages[messageKey]}</p>
         )}
-      </section>
+        {error && (
+          <p role="alert" className="clients-message clients-error">
+            Could not load clients. Check the Supabase table permissions.
+          </p>
+        )}
+
+        <section className="clients-stats" aria-label="Client summary">
+          {[
+            { label: "Total clients", value: clients.length },
+            { label: "Active", value: clients.filter((c) => c.status === "active").length },
+            { label: "Onboarding", value: clients.filter((c) => c.status === "onboarding").length },
+            { label: "Paused", value: clients.filter((c) => c.status === "paused").length },
+          ].map((stat) => (
+            <article className="clients-stat" key={stat.label}>
+              <p className="clients-stat-label">{stat.label}</p>
+              <strong className="clients-stat-value">{stat.value}</strong>
+            </article>
+          ))}
+        </section>
+
+        <section className="clients-panel">
+          <h2>Add a client</h2>
+          <p className="clients-panel-subtitle">Create a shared workspace for a new client. You can update these details later.</p>
+          <form action={createClientAction} className="clients-form-grid">
+            <label>
+              Client / company name *
+              <input name="name" required maxLength={120} placeholder="e.g. Acme Industries" />
+            </label>
+            <label>
+              Industry
+              <input name="industry" maxLength={100} placeholder="e.g. Healthcare" />
+            </label>
+            <label>
+              Status
+              <select name="status" defaultValue="onboarding">
+                {STATUSES.map((status) => <option key={status} value={status}>{statusLabel(status)}</option>)}
+              </select>
+            </label>
+            <label>
+              Time zone
+              <select name="timezone" defaultValue="Asia/Kolkata">
+                <option value="Asia/Kolkata">India (Asia/Kolkata)</option>
+                <option value="UTC">UTC</option>
+                <option value="Asia/Singapore">Singapore</option>
+                <option value="Europe/London">London</option>
+                <option value="America/New_York">New York</option>
+              </select>
+            </label>
+            <label>
+              Currency
+              <select name="currency" defaultValue="INR">
+                <option value="INR">INR ₹</option>
+                <option value="USD">USD $</option>
+                <option value="GBP">GBP £</option>
+                <option value="EUR">EUR €</option>
+                <option value="SGD">SGD $</option>
+              </select>
+            </label>
+            <div><button type="submit" className="clients-primary">+ Add client</button></div>
+          </form>
+        </section>
+
+        <section className="clients-panel">
+          <div className="clients-list-heading">
+            <div>
+              <h2>Your clients</h2>
+              <p className="clients-panel-subtitle">{filtered.length} of {clients.length} clients</p>
+            </div>
+            <form method="get" className="clients-filters">
+              <input name="q" defaultValue={q} placeholder="Search name or industry" aria-label="Search name or industry" />
+              <select name="status" defaultValue={statusFilter} aria-label="Filter by status">
+                <option value="">All statuses</option>
+                {STATUSES.map((status) => <option key={status} value={status}>{statusLabel(status)}</option>)}
+              </select>
+              <button type="submit" className="clients-secondary">Search</button>
+              <Link href="/clients" className="clients-button clients-secondary">Reset</Link>
+            </form>
+          </div>
+
+          {filtered.length === 0 ? (
+            <div className="clients-empty">
+              <strong>{clients.length === 0 ? "Your first client starts here" : "No matching clients"}</strong>
+              <p>{clients.length === 0 ? "Add a client above to create your first workspace." : "Try another search term or status filter."}</p>
+            </div>
+          ) : (
+            <div className="clients-table-wrap">
+              <table className="clients-table">
+                <thead>
+                  <tr>
+                    {["Client", "Industry", "Status", "Time zone", "Currency", "Created", "Actions"].map((heading) => (
+                      <th key={heading}>{heading}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((client) => (
+                    <tr key={client.id}>
+                      <td>
+                        <Link href={`/clients/${client.id}`} className="clients-name">{client.name} ↗</Link>
+                        <span className="clients-slug">{client.slug}</span>
+                      </td>
+                      <td>{client.industry || "—"}</td>
+                      <td><span className={`clients-status ${client.status}`}>{statusLabel(client.status)}</span></td>
+                      <td>{client.timezone}</td>
+                      <td>{client.currency}</td>
+                      <td>{new Date(client.created_at).toLocaleDateString("en-IN")}</td>
+                      <td>
+                        <details className="clients-actions">
+                          <summary>Edit / Delete</summary>
+                          <form action={updateClientAction}>
+                            <input type="hidden" name="id" value={client.id} />
+                            <input name="name" required defaultValue={client.name} maxLength={120} aria-label={`Name for ${client.name}`} />
+                            <input name="industry" defaultValue={client.industry ?? ""} placeholder="Industry" aria-label="Industry" />
+                            <select name="status" defaultValue={client.status} aria-label="Status">
+                              {STATUSES.map((status) => <option key={status} value={status}>{statusLabel(status)}</option>)}
+                            </select>
+                            <select name="timezone" defaultValue={client.timezone} aria-label="Time zone">
+                              <option value="Asia/Kolkata">India</option>
+                              <option value="UTC">UTC</option>
+                              <option value="Asia/Singapore">Singapore</option>
+                              <option value="Europe/London">London</option>
+                              <option value="America/New_York">New York</option>
+                            </select>
+                            <select name="currency" defaultValue={client.currency} aria-label="Currency">
+                              <option value="INR">INR</option>
+                              <option value="USD">USD</option>
+                              <option value="GBP">GBP</option>
+                              <option value="EUR">EUR</option>
+                              <option value="SGD">SGD</option>
+                            </select>
+                            <button type="submit" className="clients-primary">Save changes</button>
+                          </form>
+                          <form action={deleteClientAction}>
+                            <input type="hidden" name="id" value={client.id} />
+                            <button type="submit" className="clients-danger">Delete client</button>
+                          </form>
+                        </details>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+      </div>
     </main>
   );
 }
-
-const inputStyle = {
-  display: "block",
-  width: "100%",
-  boxSizing: "border-box" as const,
-  padding: "10px 12px",
-  marginTop: 6,
-  border: "1px solid #cbd5e1",
-  borderRadius: 9,
-  background: "white",
-  color: "#0f172a",
-};
-
-const primaryButton = {
-  padding: "11px 16px",
-  background: "#5b55e7",
-  color: "white",
-  border: 0,
-  borderRadius: 9,
-  cursor: "pointer",
-  fontWeight: 700,
-};
-
-const secondaryButton = {
-  padding: "10px 14px",
-  background: "white",
-  color: "#334155",
-  border: "1px solid #cbd5e1",
-  borderRadius: 9,
-  cursor: "pointer",
-};
-
-const dangerButton = {
-  padding: "9px 12px",
-  background: "#fff1f2",
-  color: "#be123c",
-  border: "1px solid #fecdd3",
-  borderRadius: 9,
-  cursor: "pointer",
-};
-
-const tableHeader = {
-  padding: "12px 10px",
-  borderBottom: "1px solid #e5e7eb",
-  color: "#64748b",
-  fontSize: 12,
-  whiteSpace: "nowrap" as const,
-};
-
-const tableCell = {
-  padding: "14px 10px",
-  borderBottom: "1px solid #f1f5f9",
-  verticalAlign: "top" as const,
-};
